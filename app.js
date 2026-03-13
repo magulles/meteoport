@@ -24,9 +24,10 @@ const locations = [
 
 const map = L.map("map").setView([39.35, -0.25], 9);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 18,
-  attribution: "&copy; OpenStreetMap contributors"
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  attribution: "&copy; OpenStreetMap &copy; Carto",
+  subdomains: "abcd",
+  maxZoom: 19
 }).addTo(map);
 
 const infoPanel = document.getElementById("info-panel");
