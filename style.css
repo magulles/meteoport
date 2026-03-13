@@ -107,4 +107,16 @@ font-size:0.9rem;
 color:#6b7280;
 }
 
+.time-control {
+  margin-bottom: 18px;
+}
 
+.time-control label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.time-control input[type="range"] {
+  width: 100%;
+}
