@@ -63,6 +63,7 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   maxZoom: 19
 }).addTo(map);
 
+
 // Calcula color según hs y umbrales
 function getStatusColor(wave, thresholds) {
   if (wave <= thresholds.greenMax) return "green";
