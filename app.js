@@ -1,3 +1,12 @@
+function getColor(status){
+  if(status === "Operational") return "green";
+  if(status === "Caution") return "orange";
+  return "red";
+}
+
+
+
+
 const locations = [
   {
     name: "Valencia Port",
@@ -42,8 +51,13 @@ function updatePanel(location) {
 }
 
 locations.forEach((location) => {
-  const marker = L.marker(location.coords).addTo(map);
-
+const marker = L.circleMarker(location.coords, {
+  radius: 8,
+  color: getColor(location.status),
+  fillColor: getColor(location.status),
+  fillOpacity: 0.9
+}).addTo(map);
+  
   marker.bindPopup(`
     <strong>${location.name}</strong><br>
     Wave: ${location.wave}<br>
