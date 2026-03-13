@@ -30,8 +30,6 @@ function getColor(status){
 }
 
 
-
-
 const map = L.map("map").setView([39.35, -0.25], 9);
 
 L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
@@ -53,10 +51,10 @@ function updatePanel(location) {
 
 locations.forEach((location) => {
 const marker = L.circleMarker(location.coords, {
-  radius: 8,
+  radius: 5,
   color: getColor(location.status),
   fillColor: getColor(location.status),
-  fillOpacity: 0.9
+  fillOpacity: 0.8
 }).addTo(map);
   
   marker.bindPopup(`
