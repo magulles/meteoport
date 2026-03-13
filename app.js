@@ -57,13 +57,11 @@ const locations = [
 const map = L.map("map").setView([39.35, -0.25], 9);
 
 // Basemap más limpio
-L.tileLayer(
-  "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",
-  {
-    attribution: "Tiles © Esri",
-    maxZoom: 13
-  }
-).addTo(map);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  attribution: "&copy; OpenStreetMap &copy; CARTO",
+  subdomains: "abcd",
+  maxZoom: 19
+}).addTo(map);
 
 // Calcula color según hs y umbrales
 function getStatusColor(wave, thresholds) {
