@@ -1,19 +1,21 @@
 const FORECAST_HOURS = 72;
 
-// Umbrales comunes para todos los puertos, de momento
+// Umbrales comunes para todos los puertos
 const COMMON_THRESHOLDS = {
   greenMax: 1.0,
   orangeMax: 2.0
 };
 
-// Variable global: hora seleccionada en la predicción
+// Estado global
 let selectedHour = 0;
 let selectedLocation = null;
+let waveChart = null;
 
 // Referencias a elementos del DOM
 const infoPanel = document.getElementById("info-panel");
 const hourSlider = document.getElementById("hour-slider");
 const hourLabel = document.getElementById("hour-label");
+const waveChartCanvas = document.getElementById("wave-chart");
 
 // Genera dirección aleatoria simple para pruebas
 function randomDirection() {
@@ -25,8 +27,8 @@ function randomDirection() {
 function generateForecast() {
   return Array.from({ length: FORECAST_HOURS }, (_, hour) => ({
     hour,
-    wave: +(0.3 + Math.random() * 2.6).toFixed(1), // entre 0.3 y 2.9 m aprox
-    wind: Math.floor(6 + Math.random() * 18),      // entre 6 y 23 kt aprox
+    wave: +(0.3 + Math.random() * 2.6).toFixed(1), // 0.3–2.9 m aprox
+    wind: Math.floor(6 + Math.random() * 18),      // 6–23 kt aprox
     dir: randomDirection()
   }));
 }
@@ -56,22 +58,21 @@ const locations = [
 // Inicialización del mapa
 const map = L.map("map").setView([39.35, -0.25], 9);
 
-// Basemap más limpio
+// Basemap
 L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   attribution: "&copy; OpenStreetMap &copy; CARTO",
   subdomains: "abcd",
   maxZoom: 19
 }).addTo(map);
 
-
-// Calcula color según hs y umbrales
+// Calcula color según Hs y umbrales
 function getStatusColor(wave, thresholds) {
   if (wave <= thresholds.greenMax) return "green";
   if (wave <= thresholds.orangeMax) return "orange";
   return "red";
 }
 
-// Convierte color en etiqueta de estado
+// Convierte color en etiqueta
 function getStatusLabel(color) {
   if (color === "green") return "Operational";
   if (color === "orange") return "Caution";
@@ -114,6 +115,70 @@ function updatePanel(location, hourIndex) {
   `;
 }
 
+// Dibuja la serie temporal de Hs
+function renderWaveChart(location, hourIndex) {
+  if (!waveChartCanvas) return;
+
+  const labels = location.forecast.map(point => point.hour);
+  const values = location.forecast.map(point => point.wave);
+
+  const pointColors = location.forecast.map((point, index) =>
+    index === hourIndex ? "red" : "#2563eb"
+  );
+
+  const pointRadii = location.forecast.map((point, index) =>
+    index === hourIndex ? 5 : 2
+  );
+
+  if (waveChart) {
+    waveChart.destroy();
+  }
+
+  waveChart = new Chart(waveChartCanvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Hs (m)",
+          data: values,
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.12)",
+          fill: true,
+          tension: 0.25,
+          pointBackgroundColor: pointColors,
+          pointRadius: pointRadii,
+          pointHoverRadius: pointRadii
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Forecast hour"
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Hs (m)"
+          },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
 // Guardamos referencias a marcadores para poder repintarlos
 const markers = [];
 
@@ -135,6 +200,7 @@ locations.forEach((location) => {
   marker.on("click", () => {
     selectedLocation = location;
     updatePanel(location, selectedHour);
+    renderWaveChart(location, selectedHour);
   });
 
   markers.push({ marker, location });
@@ -165,6 +231,7 @@ if (hourSlider && hourLabel) {
 
     if (selectedLocation) {
       updatePanel(selectedLocation, selectedHour);
+      renderWaveChart(selectedLocation, selectedHour);
     }
   });
 }
