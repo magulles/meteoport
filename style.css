@@ -94,3 +94,17 @@ body {
     min-height: 70vh;
   }
 }
+
+.logo{
+height:46px;
+width:auto;
+display:block;
+}
+
+.tagline{
+margin:4px 0 0;
+font-size:0.9rem;
+color:#6b7280;
+}
+
+
