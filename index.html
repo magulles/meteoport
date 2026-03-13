@@ -30,6 +30,12 @@
   <main class="app-layout">
     <aside class="sidebar">
       <h2>Selected location</h2>
+<div class="time-control">
+  <label for="hour-slider">
+    Forecast hour: <span id="hour-label">0</span>h
+  </label>
+  <input type="range" id="hour-slider" min="0" max="71" value="0">
+</div>
       <div id="info-panel" class="info-panel">
         <p><strong>Name:</strong> Click a marker</p>
         <p><strong>Wave:</strong> --</p>
