@@ -1,12 +1,3 @@
-function getColor(status){
-  if(status === "Operational") return "green";
-  if(status === "Caution") return "orange";
-  return "red";
-}
-
-
-
-
 const locations = [
   {
     name: "Valencia Port",
@@ -27,9 +18,19 @@ const locations = [
     coords: [38.995, -0.153],
     wave: "1.5 m",
     wind: "16 kt ENE",
-    status: "Caution"
+    status: "closed"
   }
 ];
+
+
+function getColor(status){
+  if(status === "Operational") return "green";
+  if(status === "Caution") return "orange";
+  return "red";
+}
+
+
+
 
 const map = L.map("map").setView([39.35, -0.25], 9);
 
