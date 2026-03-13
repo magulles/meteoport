@@ -14,6 +14,7 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -28,7 +29,9 @@
   </header>
 
   <main class="app-layout">
+    
 <aside class="sidebar">
+
   <h2>Selected location</h2>
 
   <div class="time-control">
@@ -44,6 +47,12 @@
     <p><strong>Wind:</strong> --</p>
     <p><strong>Status:</strong> --</p>
   </div>
+
+  <div class="chart-panel">
+    <h3>Hs forecast</h3>
+    <canvas id="wave-chart"></canvas>
+  </div>
+
 </aside>
 
     <section class="map-section">
