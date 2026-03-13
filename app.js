@@ -122,10 +122,10 @@ locations.forEach((location) => {
   const color = getStatusColor(point.wave, location.thresholds);
 
   const marker = L.circleMarker(location.coords, {
-    radius: 8,
+    radius: 5,
     color,
     fillColor: color,
-    fillOpacity: 0.9,
+    fillOpacity: 0.8,
     weight: 2
   }).addTo(map);
 
