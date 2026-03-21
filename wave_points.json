@@ -1,7 +1,7 @@
 [
   {
     "point_id": 1,
-    "name": "Point 001",
+    "name": "sitio1",
     "lon": 13.666667938232422,
     "lat": 45.60416793823242,
     "forecast": [
@@ -735,7 +735,7 @@
   },
   {
     "point_id": 2,
-    "name": "Point 002",
+    "name": "sitio2",
     "lon": 13.541667938232422,
     "lat": 45.60416793823242,
     "forecast": [
@@ -1469,7 +1469,7 @@
   },
   {
     "point_id": 3,
-    "name": "Point 003",
+    "name": "sitio3",
     "lon": 0.7916672229766846,
     "lat": 38.8125,
     "forecast": [
@@ -2203,7 +2203,7 @@
   },
   {
     "point_id": 4,
-    "name": "Point 004",
+    "name": "sitio4",
     "lon": 25.125001907348633,
     "lat": 35.72916793823242,
     "forecast": [
@@ -2937,7 +2937,7 @@
   },
   {
     "point_id": 5,
-    "name": "Point 005",
+    "name": "sitio5",
     "lon": 2.708333969116211,
     "lat": 39.47916793823242,
     "forecast": [
@@ -3671,7 +3671,7 @@
   },
   {
     "point_id": 6,
-    "name": "Point 006",
+    "name": "sitio6",
     "lon": 21.625001907348633,
     "lat": 36.8125,
     "forecast": [
