@@ -34,7 +34,7 @@ function generateForecast() {
 }
 
 // ÚNICO punto de trabajo
-const location = {
+const sitePoint = {
   name: "Valencia Port",
   coords: [39.448, -0.316],
   thresholds: { ...THRESHOLDS },
@@ -42,7 +42,7 @@ const location = {
 };
 
 // Inicialización del mapa
-const map = L.map("map").setView(location.coords, 9);
+const map = L.map("map").setView(sitePoint.coords, 9);
 
 // Basemap
 L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
@@ -66,18 +66,18 @@ function getStatusLabel(color) {
 }
 
 // Devuelve el forecast para la hora activa
-function getForecastPoint(location, hourIndex) {
-  return location.forecast[hourIndex];
+function getForecastPoint(site, hourIndex) {
+  return site.forecast[hourIndex];
 }
 
 // HTML del popup
-function getPopupContent(location, hourIndex) {
-  const point = getForecastPoint(location, hourIndex);
-  const color = getStatusColor(point.wave, location.thresholds);
+function getPopupContent(site, hourIndex) {
+  const point = getForecastPoint(site, hourIndex);
+  const color = getStatusColor(point.wave, site.thresholds);
   const label = getStatusLabel(color);
 
   return `
-    <strong>${location.name}</strong><br>
+    <strong>${site.name}</strong><br>
     Forecast: +${point.hour}h<br>
     Wave: ${point.wave} m<br>
     Wind: ${point.wind} kt ${point.dir}<br>
@@ -86,33 +86,33 @@ function getPopupContent(location, hourIndex) {
 }
 
 // Actualiza panel lateral
-function updatePanel(location, hourIndex) {
-  const point = getForecastPoint(location, hourIndex);
-  const color = getStatusColor(point.wave, location.thresholds);
+function updatePanel(site, hourIndex) {
+  const point = getForecastPoint(site, hourIndex);
+  const color = getStatusColor(point.wave, site.thresholds);
   const label = getStatusLabel(color);
 
   infoPanel.innerHTML = `
-    <p><strong>Name:</strong> ${location.name}</p>
+    <p><strong>Name:</strong> ${site.name}</p>
     <p><strong>Forecast hour:</strong> +${point.hour}h</p>
     <p><strong>Wave:</strong> ${point.wave} m</p>
     <p><strong>Wind:</strong> ${point.wind} kt ${point.dir}</p>
     <p><strong>Status:</strong> <span style="color:${color}; font-weight:600;">${label}</span></p>
-    <p><strong>Thresholds:</strong> green ≤ ${location.thresholds.greenMax} m, orange ≤ ${location.thresholds.orangeMax} m, red > ${location.thresholds.orangeMax} m</p>
+    <p><strong>Thresholds:</strong> green ≤ ${site.thresholds.greenMax} m, orange ≤ ${site.thresholds.orangeMax} m, red > ${site.thresholds.orangeMax} m</p>
   `;
 }
 
 // Dibuja la serie temporal de Hs
-function renderWaveChart(location, hourIndex) {
-  if (!waveChartCanvas) return;
+function renderWaveChart(site, hourIndex) {
+  if (!waveChartCanvas || typeof Chart === "undefined") return;
 
-  const labels = location.forecast.map(point => point.hour);
-  const values = location.forecast.map(point => point.wave);
+  const labels = site.forecast.map(point => point.hour);
+  const values = site.forecast.map(point => point.wave);
 
-  const pointColors = location.forecast.map((point, index) =>
+  const pointColors = site.forecast.map((point, index) =>
     index === hourIndex ? "red" : "#2563eb"
   );
 
-  const pointRadii = location.forecast.map((point, index) =>
+  const pointRadii = site.forecast.map((point, index) =>
     index === hourIndex ? 5 : 2
   );
 
@@ -166,10 +166,10 @@ function renderWaveChart(location, hourIndex) {
 }
 
 // Crear único marcador
-const initialPoint = getForecastPoint(location, selectedHour);
-const initialColor = getStatusColor(initialPoint.wave, location.thresholds);
+const initialPoint = getForecastPoint(sitePoint, selectedHour);
+const initialColor = getStatusColor(initialPoint.wave, sitePoint.thresholds);
 
-const marker = L.circleMarker(location.coords, {
+const marker = L.circleMarker(sitePoint.coords, {
   radius: 6,
   color: initialColor,
   fillColor: initialColor,
@@ -177,29 +177,29 @@ const marker = L.circleMarker(location.coords, {
   weight: 2
 }).addTo(map);
 
-marker.bindPopup(getPopupContent(location, selectedHour));
+marker.bindPopup(getPopupContent(sitePoint, selectedHour));
 
 marker.on("click", () => {
-  selectedLocation = location;
-  updatePanel(location, selectedHour);
-  renderWaveChart(location, selectedHour);
+  selectedLocation = sitePoint;
+  updatePanel(sitePoint, selectedHour);
+  renderWaveChart(sitePoint, selectedHour);
 });
 
 // Repinta el marcador al cambiar la hora
 function refreshMarker() {
-  const point = getForecastPoint(location, selectedHour);
-  const color = getStatusColor(point.wave, location.thresholds);
+  const point = getForecastPoint(sitePoint, selectedHour);
+  const color = getStatusColor(point.wave, sitePoint.thresholds);
 
   marker.setStyle({
     color,
     fillColor: color
   });
 
-  marker.setPopupContent(getPopupContent(location, selectedHour));
+  marker.setPopupContent(getPopupContent(sitePoint, selectedHour));
 
   if (selectedLocation) {
-    updatePanel(location, selectedHour);
-    renderWaveChart(location, selectedHour);
+    updatePanel(sitePoint, selectedHour);
+    renderWaveChart(sitePoint, selectedHour);
   }
 }
 
