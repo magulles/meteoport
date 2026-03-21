@@ -1,7 +1,7 @@
 const FORECAST_HOURS = 72;
 
-// Umbrales comunes para todos los puertos
-const COMMON_THRESHOLDS = {
+// Umbrales para el punto
+const THRESHOLDS = {
   greenMax: 1.0,
   orangeMax: 2.0
 };
@@ -27,36 +27,22 @@ function randomDirection() {
 function generateForecast() {
   return Array.from({ length: FORECAST_HOURS }, (_, hour) => ({
     hour,
-    wave: +(0.3 + Math.random() * 2.6).toFixed(1), // 0.3–2.9 m aprox
-    wind: Math.floor(6 + Math.random() * 18),      // 6–23 kt aprox
+    wave: +(0.3 + Math.random() * 2.6).toFixed(1),
+    wind: Math.floor(6 + Math.random() * 18),
     dir: randomDirection()
   }));
 }
 
-// Datos iniciales de puertos
-const locations = [
-  {
-    name: "Valencia Port",
-    coords: [39.448, -0.316],
-    thresholds: { ...COMMON_THRESHOLDS },
-    forecast: generateForecast()
-  },
-  {
-    name: "Sagunto Port",
-    coords: [39.641, -0.214],
-    thresholds: { ...COMMON_THRESHOLDS },
-    forecast: generateForecast()
-  },
-  {
-    name: "Gandia Port",
-    coords: [38.995, -0.153],
-    thresholds: { ...COMMON_THRESHOLDS },
-    forecast: generateForecast()
-  }
-];
+// ÚNICO punto de trabajo
+const location = {
+  name: "Valencia Port",
+  coords: [39.448, -0.316],
+  thresholds: { ...THRESHOLDS },
+  forecast: generateForecast()
+};
 
 // Inicialización del mapa
-const map = L.map("map").setView([39.35, -0.25], 9);
+const map = L.map("map").setView(location.coords, 9);
 
 // Basemap
 L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
@@ -79,7 +65,7 @@ function getStatusLabel(color) {
   return "High risk";
 }
 
-// Devuelve el forecast de una localización para la hora activa
+// Devuelve el forecast para la hora activa
 function getForecastPoint(location, hourIndex) {
   return location.forecast[hourIndex];
 }
@@ -179,59 +165,53 @@ function renderWaveChart(location, hourIndex) {
   });
 }
 
-// Guardamos referencias a marcadores para poder repintarlos
-const markers = [];
+// Crear único marcador
+const initialPoint = getForecastPoint(location, selectedHour);
+const initialColor = getStatusColor(initialPoint.wave, location.thresholds);
 
-// Crear marcadores iniciales
-locations.forEach((location) => {
+const marker = L.circleMarker(location.coords, {
+  radius: 6,
+  color: initialColor,
+  fillColor: initialColor,
+  fillOpacity: 0.8,
+  weight: 2
+}).addTo(map);
+
+marker.bindPopup(getPopupContent(location, selectedHour));
+
+marker.on("click", () => {
+  selectedLocation = location;
+  updatePanel(location, selectedHour);
+  renderWaveChart(location, selectedHour);
+});
+
+// Repinta el marcador al cambiar la hora
+function refreshMarker() {
   const point = getForecastPoint(location, selectedHour);
   const color = getStatusColor(point.wave, location.thresholds);
 
-  const marker = L.circleMarker(location.coords, {
-    radius: 5,
+  marker.setStyle({
     color,
-    fillColor: color,
-    fillOpacity: 0.8,
-    weight: 2
-  }).addTo(map);
+    fillColor: color
+  });
 
-  marker.bindPopup(getPopupContent(location, selectedHour));
+  marker.setPopupContent(getPopupContent(location, selectedHour));
 
-  marker.on("click", () => {
-    selectedLocation = location;
+  if (selectedLocation) {
     updatePanel(location, selectedHour);
     renderWaveChart(location, selectedHour);
-  });
-
-  markers.push({ marker, location });
-});
-
-// Repinta todos los marcadores al cambiar la hora
-function refreshMarkers() {
-  markers.forEach(({ marker, location }) => {
-    const point = getForecastPoint(location, selectedHour);
-    const color = getStatusColor(point.wave, location.thresholds);
-
-    marker.setStyle({
-      color,
-      fillColor: color
-    });
-
-    marker.setPopupContent(getPopupContent(location, selectedHour));
-  });
+  }
 }
 
 // Slider temporal
 if (hourSlider && hourLabel) {
+  hourSlider.max = FORECAST_HOURS - 1;
+  hourSlider.value = selectedHour;
+  hourLabel.textContent = selectedHour;
+
   hourSlider.addEventListener("input", (event) => {
     selectedHour = Number(event.target.value);
     hourLabel.textContent = selectedHour;
-
-    refreshMarkers();
-
-    if (selectedLocation) {
-      updatePanel(selectedLocation, selectedHour);
-      renderWaveChart(selectedLocation, selectedHour);
-    }
+    refreshMarker();
   });
 }
