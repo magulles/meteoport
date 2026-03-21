@@ -211,7 +211,7 @@ fetch("./wave_points.json")
     console.log("wave_points.json cargado:", data);
 
     locations = data.map(point => ({
-      name: `Point ${point.point_id}`,
+     name: point.name,
       coords: [point.lat, point.lon],
       thresholds: { ...THRESHOLDS },
       forecast: point.forecast.map((f, i) => ({
