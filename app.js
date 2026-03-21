@@ -48,6 +48,17 @@ function getForecastPoint(site, hourIndex) {
   return site.forecast[hourIndex];
 }
 
+// Actualiza el texto superior de tiempo
+function updateHourLabel() {
+  if (!hourLabel) return;
+
+  if (locations.length > 0 && locations[0].forecast[selectedHour]) {
+    hourLabel.textContent = locations[0].forecast[selectedHour].time;
+  } else {
+    hourLabel.textContent = "--";
+  }
+}
+
 // HTML del popup
 function getPopupContent(site, hourIndex) {
   const point = getForecastPoint(site, hourIndex);
@@ -56,7 +67,7 @@ function getPopupContent(site, hourIndex) {
 
   return `
     <strong>${site.name}</strong><br>
-    Forecast: +${point.hour}h<br>
+    Time: ${point.time}<br>
     Wave: ${point.wave} m<br>
     Tp: ${point.tp} s<br>
     Dir: ${point.dir}°<br>
@@ -72,7 +83,7 @@ function updatePanel(site, hourIndex) {
 
   infoPanel.innerHTML = `
     <p><strong>Name:</strong> ${site.name}</p>
-    <p><strong>Forecast hour:</strong> +${point.hour}h</p>
+    <p><strong>Time:</strong> ${point.time}</p>
     <p><strong>Wave:</strong> ${point.wave} m</p>
     <p><strong>Tp:</strong> ${point.tp} s</p>
     <p><strong>Direction:</strong> ${point.dir}°</p>
@@ -130,7 +141,7 @@ function renderWaveChart(site, hourIndex) {
         x: {
           title: {
             display: true,
-            text: "Forecast hour"
+            text: "Forecast hour index"
           }
         },
         y: {
@@ -193,6 +204,8 @@ function refreshMarker() {
     marker.setPopupContent(getPopupContent(site, selectedHour));
   });
 
+  updateHourLabel();
+
   if (selectedLocation) {
     updatePanel(selectedLocation, selectedHour);
     renderWaveChart(selectedLocation, selectedHour);
@@ -211,11 +224,12 @@ fetch("./wave_points.json")
     console.log("wave_points.json cargado:", data);
 
     locations = data.map(point => ({
-     name: point.name,
+      name: point.name,
       coords: [point.lat, point.lon],
       thresholds: { ...THRESHOLDS },
       forecast: point.forecast.map((f, i) => ({
         hour: i,
+        time: f.time,
         wave: f.hs,
         tp: f.tp,
         dir: f.di
@@ -223,6 +237,7 @@ fetch("./wave_points.json")
     }));
 
     createMarkers();
+    updateHourLabel();
   })
   .catch(error => {
     console.error("Error cargando wave_points.json:", error);
@@ -232,11 +247,10 @@ fetch("./wave_points.json")
 if (hourSlider && hourLabel) {
   hourSlider.max = FORECAST_HOURS - 1;
   hourSlider.value = selectedHour;
-  hourLabel.textContent = selectedHour;
+  updateHourLabel();
 
   hourSlider.addEventListener("input", event => {
     selectedHour = Number(event.target.value);
-    hourLabel.textContent = selectedHour;
     refreshMarker();
   });
 }
