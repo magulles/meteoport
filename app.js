@@ -134,10 +134,14 @@ function renderWaveChart(site, hourIndex) {
   const date = new Date(p.time);
 
   const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
 
-  return `${month}-${day} ${hours}h`;
+  const months = ["ene", "feb", "mar", "abr", "may", "jun",
+                  "jul", "ago", "sep", "oct", "nov", "dic"];
+
+  const monthName = months[date.getMonth()];
+
+  return `${day} ${monthName} ${hours}h`;
 });
   
   const values = site.forecast.map(p => p.wave);
