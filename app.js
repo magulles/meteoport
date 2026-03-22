@@ -29,140 +29,146 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   maxZoom: 19
 }).addTo(map);
 
-// Calcula color según Hs y umbrales
+// Helpers
+function formatNumber(value, digits = 2) {
+  if (value === null || value === undefined || Number.isNaN(value)) return "--";
+  return Number(value).toFixed(digits);
+}
+
+function getForecastLength() {
+  if (!locations.length) return 0;
+  return Math.max(...locations.map(site => (site.forecast ? site.forecast.length : 0)));
+}
+
 function getStatusColor(wave, thresholds) {
+  if (wave === null || wave === undefined || Number.isNaN(wave)) return "gray";
   if (wave <= thresholds.greenMax) return "green";
   if (wave <= thresholds.orangeMax) return "orange";
   return "red";
 }
 
-// Convierte color en etiqueta
 function getStatusLabel(color) {
   if (color === "green") return "Operational";
   if (color === "orange") return "Caution";
+  if (color === "gray") return "No data";
   return "High risk";
 }
 
-// Devuelve el forecast para la hora activa
 function getForecastPoint(site, hourIndex) {
-  return site.forecast[hourIndex];
+  if (!site || !site.forecast || !site.forecast.length) return null;
+  return site.forecast[hourIndex] || null;
 }
 
-// Actualiza el texto superior de tiempo
 function updateHourLabel() {
   if (!hourLabel) return;
 
-  if (locations.length > 0 && locations[0].forecast[selectedHour]) {
-    hourLabel.textContent = locations[0].forecast[selectedHour].time;
+  const refPoint = locations.find(site => site.forecast && site.forecast[selectedHour]);
+  if (refPoint) {
+    hourLabel.textContent = refPoint.forecast[selectedHour].time || "--";
   } else {
     hourLabel.textContent = "--";
   }
 }
 
-// HTML del popup
+// Popup
 function getPopupContent(site, hourIndex) {
   const point = getForecastPoint(site, hourIndex);
+
+  if (!point) {
+    return `<strong>${site.name}</strong><br>No data for this hour`;
+  }
+
   const color = getStatusColor(point.wave, site.thresholds);
   const label = getStatusLabel(color);
 
   return `
     <strong>${site.name}</strong><br>
-    Time: ${point.time}<br>
-    Wave: ${point.wave} m<br>
-    Tp: ${point.tp} s<br>
-    Dir: ${point.dir}°<br>
+    Time: ${point.time || "--"}<br>
+    Wave: ${formatNumber(point.wave)} m<br>
+    Tp: ${formatNumber(point.tp)} s<br>
+    Wave dir: ${formatNumber(point.dir)}°<br>
+    Wind 10 m: ${formatNumber(point.windSpeed)} m/s<br>
+    Wind dir: ${formatNumber(point.windDir)}°<br>
     Status: <span style="color:${color}; font-weight:600;">${label}</span>
   `;
 }
 
-// Actualiza panel lateral
+// Panel lateral
 function updatePanel(site, hourIndex) {
+  if (!infoPanel) return;
+
   const point = getForecastPoint(site, hourIndex);
+
+  if (!point) {
+    infoPanel.innerHTML = `
+      <p><strong>Name:</strong> ${site.name}</p>
+      <p><strong>Status:</strong> No data for this hour</p>
+    `;
+    return;
+  }
+
   const color = getStatusColor(point.wave, site.thresholds);
   const label = getStatusLabel(color);
 
   infoPanel.innerHTML = `
     <p><strong>Name:</strong> ${site.name}</p>
-    <p><strong>Time:</strong> ${point.time}</p>
-    <p><strong>Wave:</strong> ${point.wave} m</p>
-    <p><strong>Tp:</strong> ${point.tp} s</p>
-    <p><strong>Direction:</strong> ${point.dir}°</p>
+    <p><strong>Time:</strong> ${point.time || "--"}</p>
+    <p><strong>Wave:</strong> ${formatNumber(point.wave)} m</p>
+    <p><strong>Tp:</strong> ${formatNumber(point.tp)} s</p>
+    <p><strong>Wave direction:</strong> ${formatNumber(point.dir)}°</p>
+    <p><strong>Wind 10 m:</strong> ${formatNumber(point.windSpeed)} m/s</p>
+    <p><strong>Wind direction:</strong> ${formatNumber(point.windDir)}°</p>
     <p><strong>Status:</strong> <span style="color:${color}; font-weight:600;">${label}</span></p>
-    <p><strong>Thresholds:</strong> green ≤ ${site.thresholds.greenMax} m, orange ≤ ${site.thresholds.orangeMax} m, red > ${site.thresholds.orangeMax} m</p>
+    <p><strong>Thresholds:</strong> green ≤ ${site.thresholds.greenMax} m, orange ≤ ${site.thresholds.orangeMax} m</p>
   `;
 }
 
-// Dibuja la serie temporal de Hs
+// Gráfico
 function renderWaveChart(site, hourIndex) {
-  if (!waveChartCanvas || typeof Chart === "undefined") return;
+  if (!waveChartCanvas || typeof Chart === "undefined" || !site?.forecast?.length) return;
 
-  const labels = site.forecast.map(point => point.hour);
-  const values = site.forecast.map(point => point.wave);
+  const labels = site.forecast.map(p => p.time || p.hour);
+  const values = site.forecast.map(p => p.wave);
 
-  const pointColors = site.forecast.map((point, index) =>
-    index === hourIndex ? "red" : "#2563eb"
+  const pointColors = site.forecast.map((p, i) =>
+    i === hourIndex ? "red" : "#2563eb"
   );
 
-  const pointRadii = site.forecast.map((point, index) =>
-    index === hourIndex ? 5 : 2
+  const pointRadii = site.forecast.map((p, i) =>
+    i === hourIndex ? 5 : 2
   );
 
-  if (waveChart) {
-    waveChart.destroy();
-  }
+  if (waveChart) waveChart.destroy();
 
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Hs (m)",
-          data: values,
-          borderColor: "#2563eb",
-          backgroundColor: "rgba(37, 99, 235, 0.12)",
-          fill: true,
-          tension: 0.25,
-          pointBackgroundColor: pointColors,
-          pointRadius: pointRadii,
-          pointHoverRadius: pointRadii
-        }
-      ]
+      datasets: [{
+        label: "Hs (m)",
+        data: values,
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37, 99, 235, 0.12)",
+        fill: true,
+        tension: 0.25,
+        pointBackgroundColor: pointColors,
+        pointRadius: pointRadii
+      }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: "Forecast hour index"
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: "Hs (m)"
-          },
-          beginAtZero: true
-        }
-      }
+      maintainAspectRatio: false
     }
   });
 }
 
-// Crear marcadores
+// Marcadores
 function createMarkers() {
   markers = [];
 
   locations.forEach(site => {
     const point = getForecastPoint(site, selectedHour);
-    const color = getStatusColor(point.wave, site.thresholds);
+    const color = point ? getStatusColor(point.wave, site.thresholds) : "gray";
 
     const marker = L.circleMarker(site.coords, {
       radius: 6,
@@ -183,24 +189,19 @@ function createMarkers() {
     markers.push({ marker, site });
   });
 
-  // Ajustar vista del mapa a todos los puntos
   if (locations.length > 0) {
     const bounds = L.latLngBounds(locations.map(site => site.coords));
     map.fitBounds(bounds, { padding: [30, 30] });
   }
 }
 
-// Repinta todos los marcadores al cambiar la hora
+// Refrescar
 function refreshMarker() {
   markers.forEach(({ marker, site }) => {
     const point = getForecastPoint(site, selectedHour);
-    const color = getStatusColor(point.wave, site.thresholds);
+    const color = point ? getStatusColor(point.wave, site.thresholds) : "gray";
 
-    marker.setStyle({
-      color,
-      fillColor: color
-    });
-
+    marker.setStyle({ color, fillColor: color });
     marker.setPopupContent(getPopupContent(site, selectedHour));
   });
 
@@ -212,45 +213,35 @@ function refreshMarker() {
   }
 }
 
-// Cargar JSON
-fetch("./wave_points.json")
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    return response.json();
-  })
+// Cargar JSON NUEVO
+fetch("./meteo_points.json")
+  .then(res => res.json())
   .then(data => {
-    console.log("wave_points.json cargado:", data);
 
-    locations = data.map(point => ({
+    const rawPoints = Array.isArray(data) ? data : data.points;
+
+    locations = rawPoints.map(point => ({
       name: point.name,
       coords: [point.lat, point.lon],
       thresholds: { ...THRESHOLDS },
-      forecast: point.forecast.map((f, i) => ({
+      forecast: (point.forecast || []).map((f, i) => ({
         hour: i,
         time: f.time,
         wave: f.hs,
         tp: f.tp,
-        dir: f.di
+        dir: f.di,
+        windSpeed: f.wind_speed_10m_ms,
+        windDir: f.wind_direction_10m_deg
       }))
     }));
 
+    hourSlider.max = getForecastLength() - 1;
     createMarkers();
     updateHourLabel();
-  })
-  .catch(error => {
-    console.error("Error cargando wave_points.json:", error);
   });
 
-// Slider temporal
-if (hourSlider && hourLabel) {
-  hourSlider.max = FORECAST_HOURS - 1;
-  hourSlider.value = selectedHour;
-  updateHourLabel();
-
-  hourSlider.addEventListener("input", event => {
-    selectedHour = Number(event.target.value);
-    refreshMarker();
-  });
-}
+// Slider
+hourSlider.addEventListener("input", e => {
+  selectedHour = Number(e.target.value);
+  refreshMarker();
+});
