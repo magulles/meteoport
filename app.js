@@ -127,7 +127,19 @@ function updatePanel(site, hourIndex) {
 function renderWaveChart(site, hourIndex) {
   if (!waveChartCanvas || typeof Chart === "undefined" || !site?.forecast?.length) return;
 
-  const labels = site.forecast.map(p => p.time || p.hour);
+  
+ const labels = site.forecast.map(p => {
+  if (!p.time) return "";
+
+  const date = new Date(p.time);
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+
+  return `${month}-${day} ${hours}h`;
+});
+  
   const values = site.forecast.map(p => p.wave);
 
   const pointColors = site.forecast.map((p, i) =>
