@@ -52,7 +52,7 @@ PASSWORD = os.environ["COPERNICUS_PASSWORD"]
 BASE_URL = "https://api.open-meteo.com/v1/forecast"
 
 # --- Merge ---
-KEEP_ONLY_COMMON_TIMES = True
+KEEP_ONLY_COMMON_TIMES = False
 
 # --- Búsqueda vecina para olas ---
 # Desplazamientos en grados a probar alrededor del punto original
