@@ -399,7 +399,10 @@ def download_wave_data(points):
 # 2) DESCARGA DE VIENTO
 # =========================
 
-def fetch_wind_forecast(lat, lon):
+import time
+import requests
+
+def fetch_wind_forecast(lat, lon, max_retries=3, timeout=60):
     params = {
         "latitude": lat,
         "longitude": lon,
@@ -409,9 +412,22 @@ def fetch_wind_forecast(lat, lon):
         "timezone": "UTC"
     }
 
-    response = requests.get(BASE_URL, params=params, timeout=30)
-    response.raise_for_status()
-    return response.json()
+    last_error = None
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = requests.get(BASE_URL, params=params, timeout=timeout)
+            response.raise_for_status()
+            return response.json()
+
+        except requests.RequestException as e:
+            last_error = e
+            print(f"  [reintento {attempt}/{max_retries}] error viento lat={lat}, lon={lon}: {e}")
+
+            if attempt < max_retries:
+                time.sleep(2 * attempt)
+
+    raise last_error
 
 
 def download_wind_data(points):
