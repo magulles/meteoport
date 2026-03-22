@@ -3,7 +3,7 @@ name: Meteo pipeline
 on:
   workflow_dispatch:
   schedule:
-    - cron: "15 4 * * *"   # cada día a las 04:15 UTC
+    - cron: "15 4 * * *"
 
 jobs:
   run-meteo:
@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
