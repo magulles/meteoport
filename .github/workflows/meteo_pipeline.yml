@@ -3,7 +3,9 @@ name: Meteo pipeline
 on:
   workflow_dispatch:
   schedule:
-    - cron: "15 4 * * *"
+    - cron: "30 2 * * *"
+    - cron: "0 14 * * *"
+    
 permissions:
   contents: write
   
