@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ruta_1",
+    "name": "Denia-Palma",
+    "departure_time": "2026-03-23T07:00:00Z",
+    "arrival_time": "2026-03-23T12:00:00Z",
+    "points": ["Denia","Deniaibi", "Ibiza","ibima1","ibima2","Palma"]
+  },
+  {
+    "id": "ruta_2",
+    "name": "Val-Bcn",
+    "departure_time": "2026-03-23T08:00:00Z",
+    "arrival_time": "2026-03-23T13:00:00Z",
+    "points": ["Valencia", "Valbar1","Valbar2","Valbar3","Barcelona"]
+  }
+]
