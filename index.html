@@ -10,19 +10,51 @@
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+
+    #chart-container {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 320px;
+      height: 200px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 1000;
+    }
+
+    #wave-chart {
+      width: 100%;
+      height: 150px;
+    }
+  </style>
 </head>
 
 <body>
 
-<div id="map" style="height: 80vh;"></div>
+<div id="map"></div>
 
-<div style="position:absolute; bottom:20px; left:20px; width:300px; background:white; padding:10px;">
-  <h3>Hs forecast</h3>
+<div id="chart-container">
+  <h4>Hs forecast</h4>
   <canvas id="wave-chart"></canvas>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="app.js"></script>
+
+<!-- IMPORTANTE: usa el nombre correcto -->
+<script src="app_v6.js"></script>
 
 </body>
 </html>
