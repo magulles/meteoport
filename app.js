@@ -11,6 +11,7 @@ let selectedHour = 0;
 let selectedLocation = null;
 let waveChart = null;
 let locations = [];
+let pdeLocations = [];
 let markers = [];
 let routes = [];
 let routeLines = [];
@@ -63,6 +64,10 @@ function getForecastPoint(site, hourIndex) {
 
 function getLocationByName(name) {
   return locations.find(loc => loc.name === name);
+}
+
+function getPdeLocationByName(name) {
+  return pdeLocations.find(loc => loc.name === name);
 }
 
 function updateHourLabel() {
@@ -156,6 +161,8 @@ function updatePanel(site, hourIndex) {
 function renderWaveChart(site, hourIndex) {
   if (!waveChartCanvas || typeof Chart === "undefined" || !site?.forecast?.length) return;
 
+  const pdeSite = getPdeLocationByName(site.name);
+
   const labels = site.forecast.map(p => {
     if (!p.time) return "";
 
@@ -172,7 +179,17 @@ function renderWaveChart(site, hourIndex) {
     return `${day} ${monthName} ${hours}h`;
   });
 
-  const values = site.forecast.map(p => p.wave);
+  const mainValues = site.forecast.map(p => p.wave);
+
+  let pdeValues = [];
+  if (pdeSite?.forecast?.length) {
+    const pdeMap = new Map(
+      pdeSite.forecast.map(p => [p.time, p.wave])
+    );
+    pdeValues = site.forecast.map(p => pdeMap.get(p.time) ?? null);
+  } else {
+    pdeValues = site.forecast.map(() => null);
+  }
 
   const pointColors = site.forecast.map((p, i) =>
     i === hourIndex ? "red" : "#2563eb"
@@ -188,20 +205,36 @@ function renderWaveChart(site, hourIndex) {
     type: "line",
     data: {
       labels,
-      datasets: [{
-        label: "Hs (m)",
-        data: values,
-        borderColor: "#2563eb",
-        backgroundColor: "rgba(37, 99, 235, 0.12)",
-        fill: true,
-        tension: 0.25,
-        pointBackgroundColor: pointColors,
-        pointRadius: pointRadii
-      }]
+      datasets: [
+        {
+          label: "Hs (Copernicus, m)",
+          data: mainValues,
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.12)",
+          fill: true,
+          tension: 0.25,
+          pointBackgroundColor: pointColors,
+          pointRadius: pointRadii
+        },
+        {
+          label: "Hs (Puertos del Estado, m)",
+          data: pdeValues,
+          borderColor: "#f97316",
+          backgroundColor: "rgba(249, 115, 22, 0.08)",
+          fill: false,
+          tension: 0.25,
+          pointRadius: 0,
+          spanGaps: true
+        }
+      ]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      }
     }
   });
 }
@@ -384,13 +417,18 @@ Promise.all([
     if (!res.ok) throw new Error(`HTTP error meteo_points.json: ${res.status}`);
     return res.json();
   }),
+  fetch("./meteo_points_pde.json").then(res => {
+    if (!res.ok) throw new Error(`HTTP error meteo_points_pde.json: ${res.status}`);
+    return res.json();
+  }),
   fetch("./routes.json").then(res => {
     if (!res.ok) throw new Error(`HTTP error routes.json: ${res.status}`);
     return res.json();
   })
 ])
-  .then(([meteoData, routesData]) => {
+  .then(([meteoData, pdeData, routesData]) => {
     const rawPoints = Array.isArray(meteoData) ? meteoData : meteoData.points;
+    const rawPdePoints = Array.isArray(pdeData) ? pdeData : pdeData.points;
 
     locations = rawPoints.map(point => ({
       name: point.name,
@@ -404,6 +442,16 @@ Promise.all([
         dir: f.di,
         windSpeed: f.wind_speed_10m_ms,
         windDir: f.wind_direction_10m_deg
+      }))
+    }));
+
+    pdeLocations = rawPdePoints.map(point => ({
+      name: point.name,
+      coords: [point.lat, point.lon],
+      forecast: (point.forecast || []).map((f, i) => ({
+        hour: i,
+        time: f.time,
+        wave: f.hs
       }))
     }));
 
@@ -421,7 +469,7 @@ Promise.all([
   .catch(error => {
     console.error("Error cargando datos:", error);
     if (infoPanel) {
-      infoPanel.innerHTML = `<p><strong>Error:</strong> No se pudieron cargar meteo_points.json o routes.json</p>`;
+      infoPanel.innerHTML = `<p><strong>Error:</strong> No se pudieron cargar meteo_points.json, meteo_points_pde.json o routes.json</p>`;
     }
   });
 
