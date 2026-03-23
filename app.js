@@ -32,6 +32,11 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   maxZoom: 19
 }).addTo(map);
 
+// Forzar recálculo de tamaño por si el contenedor tarda en asentarse
+setTimeout(() => {
+  map.invalidateSize();
+}, 200);
+
 // Helpers
 function formatNumber(value, digits = 2) {
   if (value === null || value === undefined || Number.isNaN(value) || value === -Infinity) return "--";
@@ -98,9 +103,7 @@ function findClosestForecast(site, targetDate) {
     }
   });
 
-  // aceptamos si está a menos de 1 hora y 1 minuto
   if (bestDiff <= 61 * 60 * 1000) return best;
-
   return null;
 }
 
@@ -164,7 +167,6 @@ function formatChartLabel(time) {
   if (!time) return "";
 
   const date = new Date(time);
-
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
 
@@ -172,7 +174,6 @@ function formatChartLabel(time) {
                   "jul", "ago", "sep", "oct", "nov", "dic"];
 
   const monthName = months[date.getMonth()];
-
   return `${day} ${monthName} ${hours}h`;
 }
 
@@ -245,6 +246,7 @@ function renderWaveChart(site, hourIndex) {
 
 // Marcadores
 function createMarkers() {
+  markers.forEach(({ marker }) => map.removeLayer(marker));
   markers = [];
 
   locations.forEach(site => {
@@ -471,11 +473,21 @@ Promise.all([
     createMarkers();
     drawRoutes();
     updateHourLabel();
+
+    if (locations.length) {
+      selectedLocation = locations[0];
+      updatePanel(selectedLocation, selectedHour);
+      renderWaveChart(selectedLocation, selectedHour);
+    }
+
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
   })
   .catch(error => {
     console.error("Error cargando datos:", error);
     if (infoPanel) {
-      infoPanel.innerHTML = `<p><strong>Error:</strong> No se pudieron cargar meteo_points.json, meteo_points_pde.json o routes.json</p>`;
+      infoPanel.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
     }
   });
 
@@ -486,5 +498,4 @@ if (hourSlider) {
     refreshMarker();
   });
 }
-
      
