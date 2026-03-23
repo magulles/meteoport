@@ -11,7 +11,6 @@ let selectedHour = 0;
 let selectedLocation = null;
 let waveChart = null;
 let locations = [];
-let pdeLocations = [];
 let markers = [];
 let routes = [];
 let routeLines = [];
@@ -31,11 +30,6 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   subdomains: "abcd",
   maxZoom: 19
 }).addTo(map);
-
-// Forzar recálculo de tamaño por si el contenedor tarda en asentarse
-setTimeout(() => {
-  map.invalidateSize();
-}, 200);
 
 // Helpers
 function formatNumber(value, digits = 2) {
@@ -71,10 +65,6 @@ function getLocationByName(name) {
   return locations.find(loc => loc.name === name);
 }
 
-function getPdeLocationByName(name) {
-  return pdeLocations.find(loc => loc.name === name);
-}
-
 function updateHourLabel() {
   if (!hourLabel) return;
 
@@ -103,7 +93,9 @@ function findClosestForecast(site, targetDate) {
     }
   });
 
+  // aceptamos si está a menos de 1 hora y 1 minuto
   if (bestDiff <= 61 * 60 * 1000) return best;
+
   return null;
 }
 
@@ -135,8 +127,6 @@ function updatePanel(site, hourIndex) {
   if (!infoPanel) return;
 
   const point = getForecastPoint(site, hourIndex);
-  const pdeSite = getPdeLocationByName(site.name);
-  const pdePoint = getForecastPoint(pdeSite, hourIndex);
 
   if (!point) {
     infoPanel.innerHTML = `
@@ -152,8 +142,7 @@ function updatePanel(site, hourIndex) {
   infoPanel.innerHTML = `
     <p><strong>Name:</strong> ${site.name}</p>
     <p><strong>Time:</strong> ${point.time || "--"}</p>
-    <p><strong>Wave (Copernicus):</strong> ${formatNumber(point.wave)} m</p>
-    <p><strong>Wave (Puertos):</strong> ${formatNumber(pdePoint?.wave)} m</p>
+    <p><strong>Wave:</strong> ${formatNumber(point.wave)} m</p>
     <p><strong>Tp:</strong> ${formatNumber(point.tp)} s</p>
     <p><strong>Wave direction:</strong> ${formatNumber(point.dir)}°</p>
     <p><strong>Wind 10 m:</strong> ${formatNumber(point.windSpeed)} m/s</p>
@@ -163,38 +152,27 @@ function updatePanel(site, hourIndex) {
   `;
 }
 
-function formatChartLabel(time) {
-  if (!time) return "";
-
-  const date = new Date(time);
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-
-  const months = ["ene", "feb", "mar", "abr", "may", "jun",
-                  "jul", "ago", "sep", "oct", "nov", "dic"];
-
-  const monthName = months[date.getMonth()];
-  return `${day} ${monthName} ${hours}h`;
-}
-
 // Gráfico
 function renderWaveChart(site, hourIndex) {
   if (!waveChartCanvas || typeof Chart === "undefined" || !site?.forecast?.length) return;
 
-  const pdeSite = getPdeLocationByName(site.name);
+  const labels = site.forecast.map(p => {
+    if (!p.time) return "";
 
-  const labels = site.forecast.map(p => formatChartLabel(p.time));
-  const mainValues = site.forecast.map(p => p.wave);
+    const date = new Date(p.time);
 
-  let pdeValues = [];
-  if (pdeSite?.forecast?.length) {
-    const pdeMap = new Map(
-      pdeSite.forecast.map(p => [p.time, p.wave])
-    );
-    pdeValues = site.forecast.map(p => pdeMap.get(p.time) ?? null);
-  } else {
-    pdeValues = site.forecast.map(() => null);
-  }
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+
+    const months = ["ene", "feb", "mar", "abr", "may", "jun",
+                    "jul", "ago", "sep", "oct", "nov", "dic"];
+
+    const monthName = months[date.getMonth()];
+
+    return `${day} ${monthName} ${hours}h`;
+  });
+
+  const values = site.forecast.map(p => p.wave);
 
   const pointColors = site.forecast.map((p, i) =>
     i === hourIndex ? "red" : "#2563eb"
@@ -210,43 +188,26 @@ function renderWaveChart(site, hourIndex) {
     type: "line",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Hs Copernicus (m)",
-          data: mainValues,
-          borderColor: "#2563eb",
-          backgroundColor: "rgba(37, 99, 235, 0.12)",
-          fill: true,
-          tension: 0.25,
-          pointBackgroundColor: pointColors,
-          pointRadius: pointRadii
-        },
-        {
-          label: "Hs Puertos (m)",
-          data: pdeValues,
-          borderColor: "#f97316",
-          backgroundColor: "rgba(249, 115, 22, 0.08)",
-          fill: false,
-          tension: 0.25,
-          pointRadius: 0,
-          spanGaps: true
-        }
-      ]
+      datasets: [{
+        label: "Hs (m)",
+        data: values,
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37, 99, 235, 0.12)",
+        fill: true,
+        tension: 0.25,
+        pointBackgroundColor: pointColors,
+        pointRadius: pointRadii
+      }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: "index",
-        intersect: false
-      }
+      maintainAspectRatio: false
     }
   });
 }
 
 // Marcadores
 function createMarkers() {
-  markers.forEach(({ marker }) => map.removeLayer(marker));
   markers = [];
 
   locations.forEach(site => {
@@ -388,6 +349,7 @@ function buildRoutePopup(route, result) {
 
 // Dibuja rutas
 function drawRoutes() {
+  // limpiar por si se vuelve a llamar
   routeLines.forEach(line => map.removeLayer(line));
   routeLines = [];
 
@@ -422,18 +384,13 @@ Promise.all([
     if (!res.ok) throw new Error(`HTTP error meteo_points.json: ${res.status}`);
     return res.json();
   }),
-  fetch("./meteo_points_pde.json").then(res => {
-    if (!res.ok) throw new Error(`HTTP error meteo_points_pde.json: ${res.status}`);
-    return res.json();
-  }),
   fetch("./routes.json").then(res => {
     if (!res.ok) throw new Error(`HTTP error routes.json: ${res.status}`);
     return res.json();
   })
 ])
-  .then(([meteoData, pdeData, routesData]) => {
+  .then(([meteoData, routesData]) => {
     const rawPoints = Array.isArray(meteoData) ? meteoData : meteoData.points;
-    const rawPdePoints = Array.isArray(pdeData) ? pdeData : pdeData.points;
 
     locations = rawPoints.map(point => ({
       name: point.name,
@@ -450,44 +407,21 @@ Promise.all([
       }))
     }));
 
-    pdeLocations = rawPdePoints.map(point => ({
-      name: point.name,
-      coords: [point.lat, point.lon],
-      forecast: (point.forecast || []).map((f, i) => ({
-        hour: i,
-        time: f.time,
-        wave: f.hs,
-        tp: f.tp,
-        dir: f.di
-      }))
-    }));
-
     routes = routesData;
 
     if (hourSlider) {
-      const maxForecastLength = Math.max(getForecastLength() - 1, 0);
-      hourSlider.max = maxForecastLength;
+      hourSlider.max = getForecastLength() - 1;
       hourSlider.value = selectedHour;
     }
 
     createMarkers();
     drawRoutes();
     updateHourLabel();
-
-    if (locations.length) {
-      selectedLocation = locations[0];
-      updatePanel(selectedLocation, selectedHour);
-      renderWaveChart(selectedLocation, selectedHour);
-    }
-
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 300);
   })
   .catch(error => {
     console.error("Error cargando datos:", error);
     if (infoPanel) {
-      infoPanel.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
+      infoPanel.innerHTML = `<p><strong>Error:</strong> No se pudieron cargar meteo_points.json o routes.json</p>`;
     }
   });
 
@@ -498,4 +432,3 @@ if (hourSlider) {
     refreshMarker();
   });
 }
-     
