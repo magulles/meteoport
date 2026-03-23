@@ -2,122 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Meteoport</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="style.css">
+
+  <!-- Leaflet -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
   />
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-    }
-
-    body {
-      position: relative;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-
-    #map {
-      width: 100%;
-      height: 100vh;
-      background: #dfe3e8;
-    }
-
-    #chart-container {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      width: 320px;
-      height: 180px;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-      z-index: 1000;
-    }
-
-    #chart-container h3 {
-      margin: 0 0 8px 0;
-      font-size: 16px;
-    }
-
-    #wave-chart {
-      width: 100%;
-      height: 130px;
-    }
-
-    #top-controls {
-      position: absolute;
-      bottom: 220px;
-      left: 20px;
-      width: 320px;
-      background: rgba(255,255,255,0.95);
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-      z-index: 1000;
-    }
-
-    #hour-label {
-      font-size: 14px;
-      margin-bottom: 8px;
-      font-weight: bold;
-    }
-
-    #hour-slider {
-      width: 100%;
-    }
-
-    #info-panel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 280px;
-      max-height: 70vh;
-      overflow-y: auto;
-      background: rgba(255,255,255,0.95);
-      border-radius: 10px;
-      padding: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-      z-index: 1000;
-      font-size: 14px;
-      line-height: 1.35;
-    }
-
-    #info-panel p {
-      margin: 0 0 8px 0;
-    }
-  </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
-  <div id="map"></div>
+  <header class="topbar">
+<div class="brand">
+  <img src="logo-meteoport.png" alt="Meteoport logo" class="logo">
+  <p class="tagline">Wave, wind and coastal conditions</p>
+</div>
 
-  <div id="top-controls">
-    <div id="hour-label">--</div>
-    <input id="hour-slider" type="range" min="0" max="71" value="0">
+    <nav class="topnav">
+      <a href="https://magulles.github.io/">Main site</a>
+    </nav>
+  </header>
+
+  <main class="app-layout">
+    
+<aside class="sidebar">
+
+  <h2>Selected location</h2>
+
+  <div class="time-control">
+    <label for="hour-slider">
+      Forecast hour: <span id="hour-label">0</span>h
+    </label>
+    <input type="range" id="hour-slider" min="0" max="71" value="0">
   </div>
 
-  <div id="chart-container">
+  <div id="info-panel" class="info-panel">
+    <p><strong>Name:</strong> Click a marker</p>
+    <p><strong>Wave:</strong> --</p>
+    <p><strong>Wind:</strong> --</p>
+    <p><strong>Status:</strong> --</p>
+  </div>
+
+  <div class="chart-panel">
     <h3>Hs forecast</h3>
     <canvas id="wave-chart"></canvas>
   </div>
 
-  <div id="info-panel">
-    <p><strong>Select a point</strong></p>
-  </div>
+</aside>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <section class="map-section">
+      <div id="map"></div>
+    </section>
+  </main>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
   <script src="app.js"></script>
 </body>
 </html>
