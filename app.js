@@ -103,18 +103,6 @@ function buildMergedForecast(point) {
   });
 }
 
-// Ojo: la dirección del modelo es "de donde viene".
-// Para dibujar la flecha como avance del oleaje, invertimos 180°.
-function directionToArrow(deg) {
-  if (deg === null || deg === undefined || Number.isNaN(deg)) return null;
-
-  const toDeg = (deg + 180) % 360;
-
-  const dirs = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
-  const index = Math.round(toDeg / 45) % 8;
-  return dirs[index];
-}
-
 function getForecastLength() {
   if (!locations.length) return 0;
   return locations[0].forecast.length;
@@ -223,7 +211,6 @@ function updateInfoPanel() {
     return;
   }
 
-  const waveArrow = directionToArrow(f.dir);
   const statusColor = getColor(f.wave);
 
   infoPanel.innerHTML = `
@@ -231,7 +218,7 @@ function updateInfoPanel() {
     <p><strong>Time:</strong> ${formatTimeLabel(f.time)}</p>
     <p><strong>Hs:</strong> ${formatNumber(f.wave)} m (${f.waveSource})</p>
     <p><strong>Tp:</strong> ${formatNumber(f.tp)} s</p>
-    <p><strong>Wave direction:</strong> ${formatNumber(f.dir)}° ${waveArrow ? waveArrow : ""}</p>
+    <p><strong>Wave direction:</strong> ${formatNumber(f.dir)}°</p>
     <p><strong>Wind:</strong> ${formatNumber(f.windSpeed)} m/s</p>
     <p><strong>Wind direction:</strong> ${formatNumber(f.windDir)}°</p>
     <p><strong>Status:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
@@ -239,78 +226,31 @@ function updateInfoPanel() {
 }
 
 // ============================
-// CHART PLUGINS
+// CHART PLUGIN: VERTICAL LINE
 // ============================
 
 const verticalCursorPlugin = {
   id: "verticalCursorPlugin",
-  afterDatasetsDraw(chart, args, pluginOptions) {
-    const index = pluginOptions?.selectedIndex ?? 0;
+  afterDraw(chart, args, options) {
+    const selectedIndex = options?.selectedIndex ?? 0;
     const xScale = chart.scales.x;
-    const yTop = chart.chartArea.top;
-    const yBottom = chart.chartArea.bottom;
+    const yScale = chart.scales.y;
 
-    if (!xScale || index < 0 || index >= chart.data.labels.length) return;
+    if (!xScale || !yScale) return;
+    if (selectedIndex < 0 || selectedIndex >= chart.data.labels.length) return;
 
-    const x = xScale.getPixelForValue(index);
+    const x = xScale.getPixelForValue(selectedIndex);
+    const topY = chart.chartArea.top;
+    const bottomY = chart.chartArea.bottom;
     const ctx = chart.ctx;
 
     ctx.save();
-    ctx.strokeStyle = "#9ca3af";
-    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(x, yTop);
-    ctx.lineTo(x, yBottom);
+    ctx.moveTo(x, topY);
+    ctx.lineTo(x, bottomY);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#9ca3af";
     ctx.stroke();
-    ctx.restore();
-  }
-};
-
-const marineAnnotationsPlugin = {
-  id: "marineAnnotationsPlugin",
-  afterDatasetsDraw(chart) {
-    const dirDatasetIndex = chart.data.datasets.findIndex(ds => ds.isDirectionRow === true);
-    const tpDatasetIndex = chart.data.datasets.findIndex(ds => ds.isTpRow === true);
-
-    if (dirDatasetIndex === -1 || tpDatasetIndex === -1) return;
-
-    const dirMeta = chart.getDatasetMeta(dirDatasetIndex);
-    const tpMeta = chart.getDatasetMeta(tpDatasetIndex);
-
-    const dirDataset = chart.data.datasets[dirDatasetIndex];
-    const tpDataset = chart.data.datasets[tpDatasetIndex];
-
-    const arrows = dirDataset.arrowLabels || [];
-    const tpLabels = tpDataset.tpLabels || [];
-
-    const ctx = chart.ctx;
-
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    dirMeta.data.forEach((point, i) => {
-      if (!point) return;
-
-      const arrow = arrows[i];
-      if (arrow) {
-        ctx.font = "15px Arial";
-        ctx.fillStyle = i === selectedHour ? "#111827" : "#4b5563";
-        ctx.fillText(arrow, point.x, point.y - 2);
-      }
-    });
-
-    tpMeta.data.forEach((point, i) => {
-      if (!point) return;
-
-      const label = tpLabels[i];
-      if (label) {
-        ctx.font = "11px Arial";
-        ctx.fillStyle = i === selectedHour ? "#111827" : "#6b7280";
-        ctx.fillText(label, point.x, point.y + 1);
-      }
-    });
-
     ctx.restore();
   }
 };
@@ -325,27 +265,8 @@ function renderChart() {
   const forecast = selectedLocation.forecast;
 
   const labels = forecast.map(f => formatTimeLabel(f.time));
-
   const hsPde = forecast.map(f => f.wavePde);
   const hsCop = forecast.map(f => f.waveCopernicus);
-
-  const dirReference = forecast.map(f => {
-    if (f.dirPde !== null && f.dirPde !== undefined && !Number.isNaN(f.dirPde)) return f.dirPde;
-    if (f.dirCopernicus !== null && f.dirCopernicus !== undefined && !Number.isNaN(f.dirCopernicus)) return f.dirCopernicus;
-    return null;
-  });
-
-  const tpReference = forecast.map(f => {
-    if (f.tpPde !== null && f.tpPde !== undefined && !Number.isNaN(f.tpPde)) return f.tpPde;
-    if (f.tpCopernicus !== null && f.tpCopernicus !== undefined && !Number.isNaN(f.tpCopernicus)) return f.tpCopernicus;
-    return null;
-  });
-
-  const dirGuide = forecast.map(() => 1);
-  const tpGuide = forecast.map(() => 0.35);
-
-  const dirArrows = dirReference.map(d => directionToArrow(d));
-  const tpLabels = tpReference.map(v => (v === null || v === undefined || Number.isNaN(v) ? null : Number(v).toFixed(1)));
 
   if (waveChart) {
     waveChart.destroy();
@@ -359,51 +280,25 @@ function renderChart() {
         {
           label: "PdE",
           data: hsPde,
-          yAxisID: "yHs",
           borderColor: "#ef4444",
           backgroundColor: "transparent",
           borderWidth: 2.2,
           pointRadius: 0,
-          pointHoverRadius: 3,
+          pointHoverRadius: 4,
           tension: 0.25,
           spanGaps: true
         },
         {
           label: "Copernicus",
           data: hsCop,
-          yAxisID: "yHs",
           borderColor: "#2563eb",
           backgroundColor: "transparent",
           borderWidth: 2,
           borderDash: [6, 4],
           pointRadius: 0,
-          pointHoverRadius: 3,
+          pointHoverRadius: 4,
           tension: 0.25,
           spanGaps: true
-        },
-        {
-          label: "Direction row",
-          data: dirGuide,
-          yAxisID: "yAux",
-          borderColor: "transparent",
-          backgroundColor: "transparent",
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          spanGaps: true,
-          isDirectionRow: true,
-          arrowLabels: dirArrows
-        },
-        {
-          label: "Tp row",
-          data: tpGuide,
-          yAxisID: "yAux",
-          borderColor: "transparent",
-          backgroundColor: "transparent",
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          spanGaps: true,
-          isTpRow: true,
-          tpLabels: tpLabels
         }
       ]
     },
@@ -422,25 +317,23 @@ function renderChart() {
         },
         tooltip: {
           callbacks: {
-            afterBody: (items) => {
+            title: (items) => {
               if (!items.length) return "";
+              const idx = items[0].dataIndex;
+              return forecast[idx]?.time || "";
+            },
+            label: () => "",
+            afterBody: (items) => {
+              if (!items.length) return [];
 
               const idx = items[0].dataIndex;
               const f = forecast[idx];
 
-              const tpText =
-                f.tpPde !== null && f.tpPde !== undefined && !Number.isNaN(f.tpPde)
-                  ? `Tp PdE: ${formatNumber(f.tpPde)} s`
-                  : `Tp Copernicus: ${formatNumber(f.tpCopernicus)} s`;
-
-              const dirValue =
-                f.dirPde !== null && f.dirPde !== undefined && !Number.isNaN(f.dirPde)
-                  ? f.dirPde
-                  : f.dirCopernicus;
-
               return [
-                tpText,
-                `Dir: ${formatNumber(dirValue, 0)}° ${directionToArrow(dirValue) || ""}`
+                `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`,
+                `Hs PdE: ${formatNumber(f.wavePde)} m`,
+                `Tp PdE: ${formatNumber(f.tpPde)} s`,
+                `Di PdE: ${formatNumber(f.dirPde, 0)}°`
               ];
             }
           }
@@ -460,9 +353,7 @@ function renderChart() {
             minRotation: 55
           }
         },
-        yHs: {
-          type: "linear",
-          position: "left",
+        y: {
           beginAtZero: true,
           title: {
             display: true,
@@ -471,23 +362,16 @@ function renderChart() {
           grid: {
             color: "#e5e7eb"
           }
-        },
-        yAux: {
-          min: 0,
-          max: 1.2,
-          display: false,
-          grid: {
-            drawOnChartArea: false
-          }
         }
       }
     },
-    plugins: [verticalCursorPlugin, marineAnnotationsPlugin]
+    plugins: [verticalCursorPlugin]
   });
 }
 
 function updateChartCursorOnly() {
   if (!waveChart) return;
+  waveChart.options.plugins.verticalCursorPlugin.selectedIndex = selectedHour;
   waveChart.update("none");
 }
 
