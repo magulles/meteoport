@@ -2,8 +2,6 @@
 // CONFIG
 // ============================
 
-const FORECAST_HOURS = 120;
-
 const THRESHOLDS = {
   greenMax: 1.0,
   orangeMax: 2.0
@@ -55,15 +53,13 @@ function formatTimeLabel(isoTime) {
   return `${month}-${day}-${hour}h`;
 }
 
-function dirToArrow(deg) {
-  if (deg === null || deg === undefined || Number.isNaN(deg)) return null;
-
-  const arrows = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
-  const idx = Math.round((((deg % 360) + 360) % 360) / 45) % 8;
-  return arrows[idx];
+function getColor(hs) {
+  if (hs === null || hs === undefined || Number.isNaN(hs)) return "#9ca3af";
+  if (hs <= THRESHOLDS.greenMax) return "green";
+  if (hs <= THRESHOLDS.orangeMax) return "orange";
+  return "red";
 }
 
-// PDE -> Copernicus
 function getOperationalWave(f) {
   const hasPde = f && f.hs_pde !== null && f.hs_pde !== undefined && !Number.isNaN(f.hs_pde);
 
@@ -72,7 +68,7 @@ function getOperationalWave(f) {
       wave: f.hs_pde,
       tp: f.tp_pde,
       dir: f.di_pde,
-      source: "PDE"
+      source: "PdE"
     };
   }
 
@@ -95,23 +91,29 @@ function buildMergedForecast(point) {
       tp: op.tp,
       dir: op.dir,
       waveSource: op.source,
-      waveCopernicus: f.hs ?? null,
-      tpCopernicus: f.tp ?? null,
-      dirCopernicus: f.di ?? null,
       wavePde: f.hs_pde ?? null,
+      waveCopernicus: f.hs ?? null,
       tpPde: f.tp_pde ?? null,
+      tpCopernicus: f.tp ?? null,
       dirPde: f.di_pde ?? null,
+      dirCopernicus: f.di ?? null,
       windSpeed: f.wind_speed_10m_ms ?? null,
       windDir: f.wind_direction_10m_deg ?? null
     };
   });
 }
 
-function getColor(hs) {
-  if (hs === null || hs === undefined || Number.isNaN(hs)) return "#9ca3af";
-  if (hs <= THRESHOLDS.greenMax) return "green";
-  if (hs <= THRESHOLDS.orangeMax) return "orange";
-  return "red";
+function directionToArrow(deg) {
+  if (deg === null || deg === undefined || Number.isNaN(deg)) return null;
+
+  const dirs = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
+  const index = Math.round((((deg % 360) + 360) % 360) / 45) % 8;
+  return dirs[index];
+}
+
+function getForecastLength() {
+  if (!locations.length) return 0;
+  return locations[0].forecast.length;
 }
 
 // ============================
@@ -139,23 +141,19 @@ fetch("./meteo_points.json")
       throw new Error("No hay puntos en meteo_points.json");
     }
 
-    if (hourSlider) {
-      const maxAvailable = Math.max(0, locations[0].forecast.length - 1);
-      hourSlider.max = maxAvailable;
-      hourSlider.value = selectedHour;
-    }
+    const maxHour = Math.max(0, getForecastLength() - 1);
+    hourSlider.max = maxHour;
+    hourSlider.value = selectedHour;
 
     initMarkers();
     updateHourLabel();
   })
   .catch(err => {
     console.error(err);
-    if (infoPanel) {
-      infoPanel.innerHTML = `
-        <p><strong>Error cargando datos</strong></p>
-        <p>${err.message}</p>
-      `;
-    }
+    infoPanel.innerHTML = `
+      <p><strong>Error cargando datos</strong></p>
+      <p>${err.message}</p>
+    `;
   });
 
 // ============================
@@ -178,15 +176,15 @@ function initMarkers() {
       weight: 2
     }).addTo(map);
 
+    marker.bindTooltip(loc.name, {
+      direction: "top",
+      offset: [0, -6]
+    });
+
     marker.on("click", () => {
       selectedLocation = loc;
       updateInfoPanel();
       updateChart();
-    });
-
-    marker.bindTooltip(loc.name, {
-      direction: "top",
-      offset: [0, -6]
     });
 
     markers.push({ marker, loc });
@@ -206,11 +204,11 @@ function updateMarkers() {
 }
 
 // ============================
-// PANEL INFO
+// PANEL
 // ============================
 
 function updateInfoPanel() {
-  if (!selectedLocation || !infoPanel) return;
+  if (!selectedLocation) return;
 
   const f = selectedLocation.forecast[selectedHour];
   if (!f) {
@@ -221,18 +219,52 @@ function updateInfoPanel() {
     return;
   }
 
-  const arrow = dirToArrow(f.dir);
+  const waveArrow = directionToArrow(f.dir);
+  const statusColor = getColor(f.wave);
 
   infoPanel.innerHTML = `
     <h3>${selectedLocation.name}</h3>
-    <p><b>Hora:</b> ${f.time ?? "--"}</p>
-    <p><b>Hs:</b> ${formatNumber(f.wave)} m (${f.waveSource})</p>
-    <p><b>Tp:</b> ${formatNumber(f.tp)} s</p>
-    <p><b>Dir:</b> ${formatNumber(f.dir)}° ${arrow ? `(${arrow})` : ""}</p>
-    <p><b>Viento:</b> ${formatNumber(f.windSpeed)} m/s</p>
-    <p><b>Dir viento:</b> ${formatNumber(f.windDir)}°</p>
+    <p><strong>Time:</strong> ${formatTimeLabel(f.time)}</p>
+    <p><strong>Hs:</strong> ${formatNumber(f.wave)} m (${f.waveSource})</p>
+    <p><strong>Tp:</strong> ${formatNumber(f.tp)} s</p>
+    <p><strong>Wave direction:</strong> ${formatNumber(f.dir)}° ${waveArrow ? waveArrow : ""}</p>
+    <p><strong>Wind:</strong> ${formatNumber(f.windSpeed)} m/s</p>
+    <p><strong>Wind direction:</strong> ${formatNumber(f.windDir)}°</p>
+    <p><strong>Status:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
   `;
 }
+
+// ============================
+// CHART PLUGIN: DIRECTION ARROWS
+// ============================
+
+const directionArrowsPlugin = {
+  id: "directionArrowsPlugin",
+  afterDatasetsDraw(chart) {
+    const dirDatasetIndex = chart.data.datasets.findIndex(ds => ds.isDirectionRow === true);
+    if (dirDatasetIndex === -1) return;
+
+    const meta = chart.getDatasetMeta(dirDatasetIndex);
+    const dataset = chart.data.datasets[dirDatasetIndex];
+    const arrows = dataset.arrowLabels || [];
+    const ctx = chart.ctx;
+
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "15px Arial";
+    ctx.fillStyle = "#4b5563";
+
+    meta.data.forEach((point, i) => {
+      if (!point) return;
+      const arrow = arrows[i];
+      if (!arrow) return;
+      ctx.fillText(arrow, point.x, point.y);
+    });
+
+    ctx.restore();
+  }
+};
 
 // ============================
 // GRÁFICA
@@ -241,58 +273,28 @@ function updateInfoPanel() {
 function updateChart() {
   if (!selectedLocation || !waveChartCanvas) return;
 
-  const labels = selectedLocation.forecast.map(f => formatTimeLabel(f.time));
+  const forecast = selectedLocation.forecast;
 
-  const hsPde = selectedLocation.forecast.map(f => f.wavePde);
-  const hsCop = selectedLocation.forecast.map(f => f.waveCopernicus);
+  const labels = forecast.map(f => formatTimeLabel(f.time));
 
-  const tpPde = selectedLocation.forecast.map(f => f.tpPde);
-  const tpCop = selectedLocation.forecast.map(f => f.tpCopernicus);
+  const hsPde = forecast.map(f => f.wavePde);
+  const hsCop = forecast.map(f => f.waveCopernicus);
 
-  const dirArrowSeries = selectedLocation.forecast.map(f => {
-    if (f.dirPde !== null && f.dirPde !== undefined && !Number.isNaN(f.dirPde)) return 2;
-    if (f.dirCopernicus !== null && f.dirCopernicus !== undefined && !Number.isNaN(f.dirCopernicus)) return 1;
+  const tpPde = forecast.map(f => f.tpPde);
+  const tpCop = forecast.map(f => f.tpCopernicus);
+
+  const dirReference = forecast.map(f => {
+    if (f.dirPde !== null && f.dirPde !== undefined && !Number.isNaN(f.dirPde)) return f.dirPde;
+    if (f.dirCopernicus !== null && f.dirCopernicus !== undefined && !Number.isNaN(f.dirCopernicus)) return f.dirCopernicus;
     return null;
   });
 
-  const dirArrowLabels = selectedLocation.forecast.map(f => {
-    const dirValue =
-      f.dirPde !== null && f.dirPde !== undefined && !Number.isNaN(f.dirPde)
-        ? f.dirPde
-        : f.dirCopernicus;
+  const dirGuide = forecast.map(() => 1);
+  const dirArrows = dirReference.map(d => directionToArrow(d));
 
-    return dirToArrow(dirValue);
-  });
-
-  const selectedIndex = selectedHour;
-
-  if (waveChart) waveChart.destroy();
-
-  const directionArrowsPlugin = {
-    id: "directionArrowsPlugin",
-    afterDatasetsDraw(chart) {
-      const dirDatasetIndex = chart.data.datasets.findIndex(ds => ds.customDirectionRow === true);
-      if (dirDatasetIndex === -1) return;
-
-      const meta = chart.getDatasetMeta(dirDatasetIndex);
-      const ctx = chart.ctx;
-
-      ctx.save();
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.font = "16px Arial";
-
-      meta.data.forEach((point, i) => {
-        const arrow = dirArrowLabels[i];
-        if (!arrow || !point) return;
-
-        ctx.fillStyle = i === selectedIndex ? "#111827" : "#6b7280";
-        ctx.fillText(arrow, point.x, point.y);
-      });
-
-      ctx.restore();
-    }
-  };
+  if (waveChart) {
+    waveChart.destroy();
+  }
 
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
@@ -330,7 +332,7 @@ function updateChart() {
           yAxisID: "yTp",
           borderColor: "#f59e0b",
           backgroundColor: "transparent",
-          borderWidth: 1.6,
+          borderWidth: 1.4,
           pointRadius: 0,
           pointHoverRadius: 2,
           tension: 0.2,
@@ -342,7 +344,7 @@ function updateChart() {
           yAxisID: "yTp",
           borderColor: "#10b981",
           backgroundColor: "transparent",
-          borderWidth: 1.4,
+          borderWidth: 1.3,
           borderDash: [4, 3],
           pointRadius: 0,
           pointHoverRadius: 2,
@@ -350,15 +352,16 @@ function updateChart() {
           spanGaps: true
         },
         {
-          label: "Dirección",
-          data: dirArrowSeries,
+          label: "Direction row",
+          data: dirGuide,
           yAxisID: "yDir",
           borderColor: "transparent",
           backgroundColor: "transparent",
           pointRadius: 0,
           pointHoverRadius: 0,
           spanGaps: true,
-          customDirectionRow: true
+          isDirectionRow: true,
+          arrowLabels: dirArrows
         }
       ]
     },
@@ -372,9 +375,7 @@ function updateChart() {
       plugins: {
         legend: {
           labels: {
-            filter: (legendItem) => {
-              return legendItem.text === "PdE" || legendItem.text === "Copernicus";
-            }
+            filter: (item) => item.text === "PdE" || item.text === "Copernicus"
           }
         },
         tooltip: {
@@ -383,43 +384,45 @@ function updateChart() {
               if (!items.length) return "";
 
               const idx = items[0].dataIndex;
-              const f = selectedLocation.forecast[idx];
-              const arrow =
-                dirToArrow(
-                  f.dirPde !== null && f.dirPde !== undefined && !Number.isNaN(f.dirPde)
-                    ? f.dirPde
-                    : f.dirCopernicus
-                ) || "-";
+              const f = forecast[idx];
 
-              const tpShown =
+              const tpText =
                 f.tpPde !== null && f.tpPde !== undefined && !Number.isNaN(f.tpPde)
                   ? `Tp PdE: ${formatNumber(f.tpPde)} s`
                   : `Tp Copernicus: ${formatNumber(f.tpCopernicus)} s`;
 
-              return [`${tpShown}`, `Dirección: ${arrow}`];
+              const dirValue =
+                f.dirPde !== null && f.dirPde !== undefined && !Number.isNaN(f.dirPde)
+                  ? f.dirPde
+                  : f.dirCopernicus;
+
+              return [
+                tpText,
+                `Dir: ${formatNumber(dirValue, 0)}° ${directionToArrow(dirValue) || ""}`
+              ];
             }
           }
         }
       },
       scales: {
         x: {
+          grid: {
+            color: "#eef2f7"
+          },
           ticks: {
             maxTicksLimit: 16,
             maxRotation: 55,
             minRotation: 55
-          },
-          grid: {
-            color: "#eef2f7"
           }
         },
         yHs: {
           type: "linear",
           position: "left",
+          beginAtZero: true,
           title: {
             display: true,
             text: "Hs (m)"
           },
-          beginAtZero: true,
           grid: {
             color: "#e5e7eb"
           }
@@ -437,7 +440,7 @@ function updateChart() {
         },
         yDir: {
           min: 0,
-          max: 3,
+          max: 2,
           display: false,
           grid: {
             drawOnChartArea: false
@@ -453,19 +456,20 @@ function updateChart() {
 // SLIDER
 // ============================
 
-if (hourSlider) {
-  hourSlider.addEventListener("input", e => {
-    selectedHour = parseInt(e.target.value, 10);
+hourSlider.addEventListener("input", e => {
+  selectedHour = parseInt(e.target.value, 10);
 
-    updateMarkers();
-    updateInfoPanel();
-    updateChart();
-    updateHourLabel();
-  });
-}
+  updateMarkers();
+  updateInfoPanel();
+  updateChart();
+  updateHourLabel();
+});
 
 function updateHourLabel() {
-  if (!hourLabel || !locations.length) return;
+  if (!locations.length) {
+    hourLabel.innerText = "--";
+    return;
+  }
 
   const refLocation = selectedLocation || locations[0];
   const f = refLocation?.forecast?.[selectedHour];
