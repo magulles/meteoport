@@ -7,54 +7,63 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Leaflet -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
   />
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
-
-<header class="topbar">
-  <div class="brand">
-    <img src="logo-meteoport.png" class="logo">
-    <p class="tagline">Wave, wind and coastal conditions</p>
-  </div>
-</header>
-
-<main class="app-layout">
-
-  <aside class="sidebar">
-
-    <h2>Selected location</h2>
-
-    <div class="time-control">
-      <label>
-        Time: <span id="hour-label">--</span>
-      </label>
-      <input type="range" id="hour-slider" min="0" max="119" value="0">
+  <header class="topbar">
+    <div class="brand">
+      <img src="logo-meteoport.png" alt="Meteoport logo" class="logo">
+      <p class="tagline">Wave, wind and coastal conditions</p>
     </div>
 
-    <div id="info-panel" class="info-panel"></div>
+    <nav class="topnav">
+      <a href="https://magulles.github.io/">Main site</a>
+    </nav>
+  </header>
 
-  </aside>
+  <main class="app-layout">
+    <aside class="sidebar">
+      <h2>Selected location</h2>
 
-  <section class="map-section">
-    <div id="map"></div>
+      <div class="time-control">
+        <label for="hour-slider">
+          Forecast time: <span id="hour-label">--</span>
+        </label>
+        <input type="range" id="hour-slider" min="0" max="119" value="0">
+      </div>
+
+      <div id="info-panel" class="info-panel">
+        <p><strong>Name:</strong> Click a marker</p>
+        <p><strong>Wave:</strong> --</p>
+        <p><strong>Wind:</strong> --</p>
+        <p><strong>Status:</strong> --</p>
+      </div>
+    </aside>
+
+    <section class="map-section">
+      <div id="map"></div>
+    </section>
+  </main>
+
+  <section class="bottom-chart">
+    <div class="chart-card">
+      <h3>Marine forecast</h3>
+      <canvas id="wave-chart"></canvas>
+    </div>
   </section>
 
-</main>
-
-<!-- 👇 GRÁFICA ABAJO FULL WIDTH -->
-<section class="bottom-chart">
-  <canvas id="wave-chart"></canvas>
-</section>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="app.js"></script>
-
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="app.js"></script>
 </body>
 </html>
