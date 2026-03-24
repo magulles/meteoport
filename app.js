@@ -106,8 +106,13 @@ function buildMergedForecast(point) {
 function directionToArrow(deg) {
   if (deg === null || deg === undefined || Number.isNaN(deg)) return null;
 
+  // El modelo da dirección DE procedencia.
+  // Para dibujar la flecha como avance del oleaje, invertimos 180°.
+  const toDeg = (deg + 180) % 360;
+
   const dirs = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
-  const index = Math.round((((deg % 360) + 360) % 360) / 45) % 8;
+  const index = Math.round(toDeg / 45) % 8;
+
   return dirs[index];
 }
 
