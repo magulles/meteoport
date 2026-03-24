@@ -32,7 +32,7 @@ jobs:
           COPERNICUS_USERNAME: ${{ secrets.COPERNICUS_USERNAME }}
           COPERNICUS_PASSWORD: ${{ secrets.COPERNICUS_PASSWORD }}
         run: |
-          python meteo_pipeline_repo.py
+          python 8_meteo_pipeline_fusionado_5d.py
 
       - name: Commit updated JSON files
         run: |
