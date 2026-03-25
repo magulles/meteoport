@@ -347,6 +347,7 @@ function renderChart() {
   const labels = forecast.map(f => formatTimeLabel(f.time));
   const hsPde = forecast.map(f => f.wavePde);
   const hsCop = forecast.map(f => f.waveCopernicus);
+  const dirPde = forecast.map(f => f.dirPde);
 
   if (waveChart) {
     waveChart.destroy();
@@ -420,6 +421,15 @@ function renderChart() {
         },
         verticalCursorPlugin: {
           selectedIndex: selectedHour
+        },
+        pdeWaveArrowsPlugin: {
+          datasetIndex: 0,      // 0 = serie roja PdE
+          directions: dirPde,   // direcciones de PdE
+          yOffsetPx: 16,        // separación constante respecto a la curva
+          arrowLengthPx: 14,
+          arrowHeadPx: 5,
+          lineWidth: 1.4,
+          color: "#ef4444"
         }
       },
       scales: {
@@ -445,7 +455,7 @@ function renderChart() {
         }
       }
     },
-    plugins: [verticalCursorPlugin]
+    plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin]
   });
 }
 
