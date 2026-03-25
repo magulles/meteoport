@@ -256,6 +256,86 @@ const verticalCursorPlugin = {
 };
 
 // ============================
+// CHART PLUGIN: PDE WAVE ARROWS
+// ============================
+
+const pdeWaveArrowsPlugin = {
+  id: "pdeWaveArrowsPlugin",
+  afterDatasetsDraw(chart, args, options) {
+    const datasetIndex = options?.datasetIndex ?? 0;
+    const directions = options?.directions ?? [];
+    const yOffsetPx = options?.yOffsetPx ?? 16;   // distancia vertical constante sobre la curva
+    const arrowLengthPx = options?.arrowLengthPx ?? 14;
+    const arrowHeadPx = options?.arrowHeadPx ?? 5;
+    const lineWidth = options?.lineWidth ?? 1.4;
+    const color = options?.color ?? "#ef4444";
+
+    const meta = chart.getDatasetMeta(datasetIndex);
+    const dataset = chart.data.datasets?.[datasetIndex];
+    const ctx = chart.ctx;
+
+    if (!meta || !dataset || meta.hidden) return;
+    if (!meta.data || !meta.data.length) return;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = lineWidth;
+
+    meta.data.forEach((pointEl, i) => {
+      const hsValue = dataset.data[i];
+      const dirFrom = directions[i];
+
+      if (hsValue === null || hsValue === undefined || Number.isNaN(hsValue)) return;
+      if (dirFrom === null || dirFrom === undefined || Number.isNaN(dirFrom)) return;
+
+      const x = pointEl.x;
+      const y = pointEl.y - yOffsetPx; // siempre la misma distancia vertical sobre la curva
+
+      // Dirección "de procedencia" -> dirección hacia donde apunta la flecha
+      // Ejemplo: 90° viene del este -> flecha hacia el oeste (izquierda)
+      const arrowBearing = (dirFrom + 180) % 360;
+
+      // Conversión de bearing náutico (0=N, 90=E) a vector canvas
+      const rad = arrowBearing * Math.PI / 180;
+      const dx = arrowLengthPx * Math.sin(rad);
+      const dy = -arrowLengthPx * Math.cos(rad);
+
+      const x1 = x - dx / 2;
+      const y1 = y - dy / 2;
+      const x2 = x + dx / 2;
+      const y2 = y + dy / 2;
+
+      // Línea principal
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      // Punta de flecha en el extremo final
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const a1 = angle + Math.PI * 0.82;
+      const a2 = angle - Math.PI * 0.82;
+
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(
+        x2 + arrowHeadPx * Math.cos(a1),
+        y2 + arrowHeadPx * Math.sin(a1)
+      );
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(
+        x2 + arrowHeadPx * Math.cos(a2),
+        y2 + arrowHeadPx * Math.sin(a2)
+      );
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  }
+};
+
+// ============================
 // GRÁFICA
 // ============================
 
