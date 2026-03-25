@@ -9,9 +9,13 @@ const THRESHOLDS = {
 
 let selectedHour = 0;
 let selectedLocation = null;
+let selectedRoute = null;
 let waveChart = null;
+
 let locations = [];
 let markers = [];
+let routes = [];
+let routeLayers = [];
 
 // DOM
 const infoPanel = document.getElementById("info-panel");
@@ -53,11 +57,40 @@ function formatTimeLabel(isoTime) {
   return `${month}-${day}-${hour}h`;
 }
 
+function formatDateTimeLong(isoTime) {
+  if (!isoTime) return "--";
+
+  const d = new Date(isoTime);
+  const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+  const year = d.getUTCFullYear();
+  const month = months[d.getUTCMonth()];
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const hour = String(d.getUTCHours()).padStart(2, "0");
+  const min = String(d.getUTCMinutes()).padStart(2, "0");
+
+  return `${day} ${month} ${year} ${hour}:${min} UTC`;
+}
+
 function getColor(hs) {
   if (hs === null || hs === undefined || Number.isNaN(hs)) return "#9ca3af";
   if (hs <= THRESHOLDS.greenMax) return "green";
   if (hs <= THRESHOLDS.orangeMax) return "orange";
   return "red";
+}
+
+function getHexColorFromHs(hs) {
+  if (hs === null || hs === undefined || Number.isNaN(hs)) return "#94a3b8";
+  if (hs <= THRESHOLDS.greenMax) return "#16a34a";
+  if (hs <= THRESHOLDS.orangeMax) return "#f59e0b";
+  return "#dc2626";
+}
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function getOperationalWave(f) {
@@ -108,19 +141,169 @@ function getForecastLength() {
   return locations[0].forecast.length;
 }
 
+function findLocationByName(name) {
+  return locations.find(loc => loc.name === name) || null;
+}
+
+// ============================
+// RUTAS
+// ============================
+
+function buildRoutes(rawRoutes) {
+  return (rawRoutes || []).map(route => {
+    const resolvedPoints = (route.points || [])
+      .map(pointName => {
+        const loc = findLocationByName(pointName);
+        return {
+          name: pointName,
+          loc
+        };
+      });
+
+    const validLocations = resolvedPoints
+      .filter(p => p.loc)
+      .map(p => p.loc);
+
+    return {
+      ...route,
+      resolvedPoints,
+      locations: validLocations
+    };
+  });
+}
+
+function calculateRouteSummary(route) {
+  if (!route || !route.locations || !route.locations.length) {
+    return {
+      hasData: false,
+      reason: "Ruta sin puntos válidos"
+    };
+  }
+
+  const startMs = new Date(route.departure_time).getTime();
+  const endMs = new Date(route.arrival_time).getTime();
+
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) {
+    return {
+      hasData: false,
+      reason: "Ventana temporal inválida"
+    };
+  }
+
+  let best = null;
+  let recordsInWindow = 0;
+
+  route.locations.forEach(loc => {
+    (loc.forecast || []).forEach(f => {
+      const t = new Date(f.time).getTime();
+      if (Number.isNaN(t)) return;
+      if (t < startMs || t > endMs) return;
+
+      recordsInWindow += 1;
+
+      if (f.wave === null || f.wave === undefined || Number.isNaN(f.wave)) return;
+
+      if (!best || f.wave > best.wave) {
+        best = {
+          locationName: loc.name,
+          time: f.time,
+          wave: f.wave,
+          tp: f.tp,
+          dir: f.dir,
+          waveSource: f.waveSource
+        };
+      }
+    });
+  });
+
+  if (!recordsInWindow) {
+    return {
+      hasData: false,
+      reason: "No hay datos en la ventana temporal de la ruta"
+    };
+  }
+
+  if (!best) {
+    return {
+      hasData: false,
+      reason: "Hay registros en la ventana, pero sin oleaje válido"
+    };
+  }
+
+  return {
+    hasData: true,
+    ...best
+  };
+}
+
+function getRouteDisplayColor(route) {
+  const summary = calculateRouteSummary(route);
+  if (!summary.hasData) return "#64748b";
+  return getHexColorFromHs(summary.wave);
+}
+
+function updateRouteStyles() {
+  routeLayers.forEach(({ route, polyline }) => {
+    const isSelected = selectedRoute && selectedRoute.id === route.id;
+    const color = getRouteDisplayColor(route);
+
+    polyline.setStyle({
+      color,
+      weight: isSelected ? 5 : 3,
+      opacity: isSelected ? 0.95 : 0.75
+    });
+  });
+}
+
+function initRoutes() {
+  routeLayers.forEach(({ polyline }) => map.removeLayer(polyline));
+  routeLayers = [];
+
+  routes.forEach(route => {
+    const latlngs = route.locations.map(loc => loc.coords);
+
+    if (latlngs.length < 2) return;
+
+    const polyline = L.polyline(latlngs, {
+      color: getRouteDisplayColor(route),
+      weight: 3,
+      opacity: 0.75
+    }).addTo(map);
+
+    polyline.bindTooltip(route.name, {
+      direction: "top",
+      sticky: true
+    });
+
+    polyline.on("click", () => {
+      selectedRoute = route;
+      selectedLocation = null;
+      updateRouteStyles();
+      updateInfoPanel();
+    });
+
+    routeLayers.push({ route, polyline });
+  });
+
+  updateRouteStyles();
+}
+
 // ============================
 // CARGA DATOS
 // ============================
 
-fetch("./meteo_points.json")
-  .then(res => {
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status} cargando meteo_points.json`);
-    }
+Promise.all([
+  fetch("./meteo_points.json").then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status} cargando meteo_points.json`);
+    return res.json();
+  }),
+  fetch("./routes.json").then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status} cargando routes.json`);
     return res.json();
   })
-  .then(data => {
-    const rawPoints = Array.isArray(data) ? data : data.points;
+])
+  .then(([meteoData, routesData]) => {
+    const rawPoints = Array.isArray(meteoData) ? meteoData : meteoData.points;
 
     locations = rawPoints.map(point => ({
       name: point.name,
@@ -133,18 +316,28 @@ fetch("./meteo_points.json")
       throw new Error("No hay puntos en meteo_points.json");
     }
 
+    routes = buildRoutes(routesData);
+
     const maxHour = Math.max(0, getForecastLength() - 1);
     hourSlider.max = maxHour;
     hourSlider.value = selectedHour;
 
     initMarkers();
+    initRoutes();
     updateHourLabel();
+
+    if (routes.length) {
+      const firstValidRouteLayer = routeLayers[0];
+      if (firstValidRouteLayer) {
+        map.fitBounds(firstValidRouteLayer.polyline.getBounds(), { padding: [30, 30] });
+      }
+    }
   })
   .catch(err => {
     console.error(err);
     infoPanel.innerHTML = `
       <p><strong>Error cargando datos</strong></p>
-      <p>${err.message}</p>
+      <p>${escapeHtml(err.message)}</p>
     `;
   });
 
@@ -175,6 +368,8 @@ function initMarkers() {
 
     marker.on("click", () => {
       selectedLocation = loc;
+      selectedRoute = null;
+      updateRouteStyles();
       updateInfoPanel();
       renderChart();
     });
@@ -199,13 +394,13 @@ function updateMarkers() {
 // PANEL
 // ============================
 
-function updateInfoPanel() {
+function renderLocationInfoPanel() {
   if (!selectedLocation) return;
 
   const f = selectedLocation.forecast[selectedHour];
   if (!f) {
     infoPanel.innerHTML = `
-      <p><strong>Name:</strong> ${selectedLocation.name}</p>
+      <p><strong>Name:</strong> ${escapeHtml(selectedLocation.name)}</p>
       <p><strong>No data for this time</strong></p>
     `;
     return;
@@ -214,14 +409,79 @@ function updateInfoPanel() {
   const statusColor = getColor(f.wave);
 
   infoPanel.innerHTML = `
-    <h3>${selectedLocation.name}</h3>
+    <h3>${escapeHtml(selectedLocation.name)}</h3>
     <p><strong>Time:</strong> ${formatTimeLabel(f.time)}</p>
-    <p><strong>Hs:</strong> ${formatNumber(f.wave)} m (${f.waveSource})</p>
+    <p><strong>Hs:</strong> ${formatNumber(f.wave)} m (${escapeHtml(f.waveSource)})</p>
     <p><strong>Tp:</strong> ${formatNumber(f.tp)} s</p>
     <p><strong>Wave direction:</strong> ${formatNumber(f.dir)}°</p>
     <p><strong>Wind:</strong> ${formatNumber(f.windSpeed)} m/s</p>
     <p><strong>Wind direction:</strong> ${formatNumber(f.windDir)}°</p>
     <p><strong>Status:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
+  `;
+}
+
+function renderRouteInfoPanel() {
+  if (!selectedRoute) return;
+
+  const summary = calculateRouteSummary(selectedRoute);
+  const missingPoints = selectedRoute.resolvedPoints.filter(p => !p.loc).map(p => p.name);
+  const pointsLabel = selectedRoute.resolvedPoints.map(p => p.name).join(" → ");
+
+  if (!summary.hasData) {
+    infoPanel.innerHTML = `
+      <h3>${escapeHtml(selectedRoute.name)}</h3>
+      <p><strong>Salida:</strong> ${formatDateTimeLong(selectedRoute.departure_time)}</p>
+      <p><strong>Llegada:</strong> ${formatDateTimeLong(selectedRoute.arrival_time)}</p>
+      <p><strong>Puntos:</strong> ${escapeHtml(pointsLabel)}</p>
+      <p><strong>Hsmax ruta:</strong> -</p>
+      <p><strong>Tp asociado:</strong> -</p>
+      <p><strong>Dirección asociada:</strong> -</p>
+      <p><strong>Estado:</strong> <span style="color:#64748b; font-weight:700;">SIN DATOS</span></p>
+      <p style="margin-top:10px;"><strong>Detalle:</strong> ${escapeHtml(summary.reason)}</p>
+      ${
+        missingPoints.length
+          ? `<p><strong>Puntos no encontrados:</strong> ${escapeHtml(missingPoints.join(", "))}</p>`
+          : ""
+      }
+    `;
+    return;
+  }
+
+  const statusColor = getColor(summary.wave);
+
+  infoPanel.innerHTML = `
+    <h3>${escapeHtml(selectedRoute.name)}</h3>
+    <p><strong>Salida:</strong> ${formatDateTimeLong(selectedRoute.departure_time)}</p>
+    <p><strong>Llegada:</strong> ${formatDateTimeLong(selectedRoute.arrival_time)}</p>
+    <p><strong>Puntos:</strong> ${escapeHtml(pointsLabel)}</p>
+    <hr style="margin:10px 0;">
+    <p><strong>Hsmax ruta:</strong> ${formatNumber(summary.wave)} m (${escapeHtml(summary.waveSource)})</p>
+    <p><strong>Tp asociado:</strong> ${formatNumber(summary.tp)} s</p>
+    <p><strong>Dirección asociada:</strong> ${formatNumber(summary.dir)}°</p>
+    <p><strong>Ocurre en:</strong> ${escapeHtml(summary.locationName)}</p>
+    <p><strong>Hora:</strong> ${formatDateTimeLong(summary.time)}</p>
+    <p><strong>Estado:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
+    ${
+      missingPoints.length
+        ? `<p><strong>Puntos no encontrados:</strong> ${escapeHtml(missingPoints.join(", "))}</p>`
+        : ""
+    }
+  `;
+}
+
+function updateInfoPanel() {
+  if (selectedRoute) {
+    renderRouteInfoPanel();
+    return;
+  }
+
+  if (selectedLocation) {
+    renderLocationInfoPanel();
+    return;
+  }
+
+  infoPanel.innerHTML = `
+    <p><strong>Selecciona un punto o una ruta</strong></p>
   `;
 }
 
@@ -264,7 +524,7 @@ const pdeWaveArrowsPlugin = {
   afterDatasetsDraw(chart, args, options) {
     const datasetIndex = options?.datasetIndex ?? 0;
     const directions = options?.directions ?? [];
-    const yOffsetPx = options?.yOffsetPx ?? 16;   // distancia vertical constante sobre la curva
+    const yOffsetPx = options?.yOffsetPx ?? 16;
     const arrowLengthPx = options?.arrowLengthPx ?? 14;
     const arrowHeadPx = options?.arrowHeadPx ?? 5;
     const lineWidth = options?.lineWidth ?? 1.4;
@@ -290,13 +550,9 @@ const pdeWaveArrowsPlugin = {
       if (dirFrom === null || dirFrom === undefined || Number.isNaN(dirFrom)) return;
 
       const x = pointEl.x;
-      const y = pointEl.y - yOffsetPx; // siempre la misma distancia vertical sobre la curva
+      const y = pointEl.y - yOffsetPx;
 
-      // Dirección "de procedencia" -> dirección hacia donde apunta la flecha
-      // Ejemplo: 90° viene del este -> flecha hacia el oeste (izquierda)
       const arrowBearing = (dirFrom + 180) % 360;
-
-      // Conversión de bearing náutico (0=N, 90=E) a vector canvas
       const rad = arrowBearing * Math.PI / 180;
       const dx = arrowLengthPx * Math.sin(rad);
       const dy = -arrowLengthPx * Math.cos(rad);
@@ -306,13 +562,11 @@ const pdeWaveArrowsPlugin = {
       const x2 = x + dx / 2;
       const y2 = y + dy / 2;
 
-      // Línea principal
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
 
-      // Punta de flecha en el extremo final
       const angle = Math.atan2(y2 - y1, x2 - x1);
       const a1 = angle + Math.PI * 0.82;
       const a2 = angle - Math.PI * 0.82;
@@ -393,18 +647,18 @@ function renderChart() {
       plugins: {
         legend: {
           labels: {
-            filter: (item) => item.text === "PdE" || item.text === "Copernicus"
+            filter: item => item.text === "PdE" || item.text === "Copernicus"
           }
         },
         tooltip: {
           callbacks: {
-            title: (items) => {
+            title: items => {
               if (!items.length) return "";
               const idx = items[0].dataIndex;
               return forecast[idx]?.time || "";
             },
             label: () => "",
-            afterBody: (items) => {
+            afterBody: items => {
               if (!items.length) return [];
 
               const idx = items[0].dataIndex;
@@ -423,9 +677,9 @@ function renderChart() {
           selectedIndex: selectedHour
         },
         pdeWaveArrowsPlugin: {
-          datasetIndex: 0,      // 0 = serie roja PdE
-          directions: dirPde,   // direcciones de PdE
-          yOffsetPx: 16,        // separación constante respecto a la curva
+          datasetIndex: 0,
+          directions: dirPde,
+          yOffsetPx: 16,
           arrowLengthPx: 14,
           arrowHeadPx: 5,
           lineWidth: 1.4,
