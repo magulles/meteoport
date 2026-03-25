@@ -429,7 +429,7 @@ function renderChart() {
           arrowLengthPx: 14,
           arrowHeadPx: 5,
           lineWidth: 1.4,
-          color: "#ef4444"
+          color: "#374151"
         }
       },
       scales: {
