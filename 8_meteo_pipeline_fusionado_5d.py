@@ -63,6 +63,7 @@ OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 # --- Puertos del Estado ---
 PDE_CATALOG_XML = "https://opendap.puertos.es/thredds/catalog/wave_regional_ibi/HOURLY/catalog.xml"
 PDE_FILESERVER_BASE = "https://opendap.puertos.es/thredds/fileServer/wave_regional_ibi/HOURLY/"
+PDE_NEIGHBOR_RADIUS = 3
 
 # --- HTTP general / robustez ---
 DEFAULT_HTTP_HEADERS = {
@@ -619,6 +620,15 @@ def open_local_nc_from_url(url: str, timeout=120, max_retries=5, backoff=8):
     raise RuntimeError(f"No se pudo descargar tras {max_retries} intentos: {url}") from last_error
 
 
+def build_pde_candidate_offsets(radius=PDE_NEIGHBOR_RADIUS):
+    offsets = []
+    for di in range(-radius, radius + 1):
+        for dj in range(-radius, radius + 1):
+            offsets.append((di, dj))
+
+    offsets.sort(key=lambda ij: (ij[0] ** 2 + ij[1] ** 2, abs(ij[0]), abs(ij[1])))
+    return offsets
+
 
 def get_nearest_indices(ds: xr.Dataset, points: List[Dict]) -> List[Tuple[int, int]]:
     lats = ds["latitude"].values
@@ -631,6 +641,69 @@ def get_nearest_indices(ds: xr.Dataset, points: List[Dict]) -> List[Tuple[int, i
         idxs.append((ilat, ilon))
     return idxs
 
+
+def extract_pde_value(ds: xr.Dataset, var_name: str, ilat: int, ilon: int):
+    if var_name not in ds.variables:
+        return None
+    try:
+        return round_or_none(ds[var_name].isel(time=0, latitude=ilat, longitude=ilon).values, 2)
+    except Exception:
+        return None
+
+
+def is_pde_cell_valid(ds: xr.Dataset, ilat: int, ilon: int) -> bool:
+    hs = extract_pde_value(ds, "VHM0", ilat, ilon)
+    tp = extract_pde_value(ds, "VTPK", ilat, ilon)
+    di = extract_pde_value(ds, "VMDR", ilat, ilon)
+    return hs is not None or tp is not None or di is not None
+
+
+def find_best_pde_cell(ds: xr.Dataset, point: Dict, base_ilat: int, base_ilon: int, offsets):
+    lats = ds["latitude"].values
+    lons = ds["longitude"].values
+
+    nlat = len(lats)
+    nlon = len(lons)
+
+    best = None
+
+    for dlat_idx, dlon_idx in offsets:
+        ilat = base_ilat + dlat_idx
+        ilon = base_ilon + dlon_idx
+
+        if ilat < 0 or ilat >= nlat or ilon < 0 or ilon >= nlon:
+            continue
+
+        hs = extract_pde_value(ds, "VHM0", ilat, ilon)
+        tp = extract_pde_value(ds, "VTPK", ilat, ilon)
+        di = extract_pde_value(ds, "VMDR", ilat, ilon)
+
+        valid = hs is not None or tp is not None or di is not None
+        grid_lon = float(lons[ilon])
+        grid_lat = float(lats[ilat])
+        dist_km = round(haversine_km(point["lon"], point["lat"], grid_lon, grid_lat), 3)
+
+        candidate = {
+            "ilat": ilat,
+            "ilon": ilon,
+            "lon": grid_lon,
+            "lat": grid_lat,
+            "distance_to_selected_grid_km": dist_km,
+            "hs_pde": hs,
+            "tp_pde": tp,
+            "di_pde": di,
+            "valid": valid,
+            "grid_offset_i": int(dlat_idx),
+            "grid_offset_j": int(dlon_idx),
+        }
+
+        if valid:
+            return candidate
+
+        if best is None:
+            best = candidate
+
+    return best
 
 
 def download_pde_wave_data(points):
@@ -647,7 +720,20 @@ def download_pde_wave_data(points):
     print(f"Número de ficheros horarios a procesar: {len(files)}")
 
     nearest_idxs = None
-    point_meta = {}
+    pde_offsets = build_pde_candidate_offsets()
+
+    point_meta = {
+        p["point_id"]: {
+            "selected_lon": None,
+            "selected_lat": None,
+            "distance_to_selected_grid_km": None,
+            "grid_offset_i": None,
+            "grid_offset_j": None,
+            "search_radius_cells": PDE_NEIGHBOR_RADIUS,
+        }
+        for p in points
+    }
+
     point_forecasts = {
         p["point_id"]: {
             "point_id": p["point_id"],
@@ -658,6 +744,9 @@ def download_pde_wave_data(points):
         }
         for p in points
     }
+
+    point_valid_counts = {p["point_id"]: 0 for p in points}
+    point_attempt_counts = {p["point_id"]: 0 for p in points}
 
     temp_files = []
     failed_hours = []
@@ -673,42 +762,45 @@ def download_pde_wave_data(points):
             try:
                 if nearest_idxs is None:
                     nearest_idxs = get_nearest_indices(ds, points)
-                    lats = ds["latitude"].values
-                    lons = ds["longitude"].values
-                    for point, (ilat, ilon) in zip(points, nearest_idxs):
-                        grid_lon = float(lons[ilon])
-                        grid_lat = float(lats[ilat])
-                        point_meta[point["point_id"]] = {
-                            "lon": grid_lon,
-                            "lat": grid_lat,
-                            "distance_to_selected_grid_km": round(
-                                haversine_km(point["lon"], point["lat"], grid_lon, grid_lat), 3
-                            ),
-                        }
 
                 m = re.match(r"HW-(\d{10})-B(\d{10})-FC\.nc", nc_name)
                 valid_time = pd.to_datetime(m.group(1), format="%Y%m%d%H", utc=True) if m else pd.NaT
                 valid_time_str = valid_time.strftime("%Y-%m-%dT%H:%M:%SZ") if not pd.isna(valid_time) else None
 
-                for point, (ilat, ilon) in zip(points, nearest_idxs):
+                for point, (base_ilat, base_ilon) in zip(points, nearest_idxs):
+                    pid = point["point_id"]
+                    point_attempt_counts[pid] += 1
+
+                    best_cell = find_best_pde_cell(
+                        ds=ds,
+                        point=point,
+                        base_ilat=base_ilat,
+                        base_ilon=base_ilon,
+                        offsets=pde_offsets,
+                    )
+
                     rec = {"time": valid_time_str}
 
-                    if "VHM0" in ds.variables:
-                        rec["hs_pde"] = round_or_none(ds["VHM0"].isel(time=0, latitude=ilat, longitude=ilon).values, 2)
-                    else:
+                    if best_cell is None:
                         rec["hs_pde"] = None
-
-                    if "VTPK" in ds.variables:
-                        rec["tp_pde"] = round_or_none(ds["VTPK"].isel(time=0, latitude=ilat, longitude=ilon).values, 2)
-                    else:
                         rec["tp_pde"] = None
-
-                    if "VMDR" in ds.variables:
-                        rec["di_pde"] = round_or_none(ds["VMDR"].isel(time=0, latitude=ilat, longitude=ilon).values, 2)
-                    else:
                         rec["di_pde"] = None
+                    else:
+                        rec["hs_pde"] = best_cell["hs_pde"]
+                        rec["tp_pde"] = best_cell["tp_pde"]
+                        rec["di_pde"] = best_cell["di_pde"]
 
-                    point_forecasts[point["point_id"]]["forecast"].append(rec)
+                        if best_cell["valid"]:
+                            point_valid_counts[pid] += 1
+
+                        meta = point_meta[pid]
+                        meta["selected_lon"] = best_cell["lon"]
+                        meta["selected_lat"] = best_cell["lat"]
+                        meta["distance_to_selected_grid_km"] = best_cell["distance_to_selected_grid_km"]
+                        meta["grid_offset_i"] = best_cell["grid_offset_i"]
+                        meta["grid_offset_j"] = best_cell["grid_offset_j"]
+
+                    point_forecasts[pid]["forecast"].append(rec)
 
             finally:
                 try:
@@ -743,16 +835,19 @@ def download_pde_wave_data(points):
             "name": point["name"],
             "requested_lon": point["lon"],
             "requested_lat": point["lat"],
-            "lon": meta.get("lon"),
-            "lat": meta.get("lat"),
+            "lon": meta.get("selected_lon"),
+            "lat": meta.get("selected_lat"),
             "forecast": forecast,
             "pde_search_info": {
                 "distance_to_selected_grid_km": meta.get("distance_to_selected_grid_km"),
                 "valid_count": valid_count,
                 "total_count": total_count,
                 "valid_ratio": round(valid_count / total_count, 4) if total_count else 0.0,
-                "attempts_made": len(files),
+                "attempts_made": point_attempt_counts[pid],
                 "failed_hours_count": len(failed_hours),
+                "search_radius_cells": meta.get("search_radius_cells"),
+                "grid_offset_i": meta.get("grid_offset_i"),
+                "grid_offset_j": meta.get("grid_offset_j"),
             },
         }
 
@@ -768,6 +863,7 @@ def download_pde_wave_data(points):
         print("Se continúa el pipeline y esas horas quedarán como faltantes en PDE.", flush=True)
 
     return out
+
 
 
 # =========================
