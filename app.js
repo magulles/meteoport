@@ -411,10 +411,10 @@ function renderChart() {
               const f = forecast[idx];
 
               return [
-                `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`,
                 `Hs PdE: ${formatNumber(f.wavePde)} m`,
                 `Tp PdE: ${formatNumber(f.tpPde)} s`,
-                `Di PdE: ${formatNumber(f.dirPde, 0)}°`
+                `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
+                `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`
               ];
             }
           }
