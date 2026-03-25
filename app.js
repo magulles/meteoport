@@ -268,7 +268,7 @@ const pdeWaveArrowsPlugin = {
     const arrowLengthPx = options?.arrowLengthPx ?? 14;
     const arrowHeadPx = options?.arrowHeadPx ?? 5;
     const lineWidth = options?.lineWidth ?? 1.4;
-    const color = options?.color ?? "#374151";
+    const color = options?.color ?? "#ef4420";
 
     const meta = chart.getDatasetMeta(datasetIndex);
     const dataset = chart.data.datasets?.[datasetIndex];
