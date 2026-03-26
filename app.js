@@ -329,7 +329,7 @@ Promise.all([
     if (routes.length) {
       const firstValidRouteLayer = routeLayers[0];
       if (firstValidRouteLayer) {
-        map.fitBounds(firstValidRouteLayer.polyline.getBounds(), { padding: [30, 30] });
+       // map.fitBounds(firstValidRouteLayer.polyline.getBounds(), { padding: [30, 30] });
       }
     }
   })
