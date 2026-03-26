@@ -19,5 +19,12 @@
     "departure_time": "2026-03-26T14:00:00Z",
     "arrival_time": "2026-03-27T23:30:00Z",
     "points": ["Huelva", "Huten1","Huten2","Huten3","Huten4","Huten5","Huten6","Huten7","Huten8","Tenerife"]
+  },
+  {
+    "id": "ruta_4",
+    "name": "Mal-Mel",
+    "departure_time": "2026-03-26T15:00:00Z",
+    "arrival_time": "2026-03-26T21:30:00Z",
+    "points": ["Huelva", "Huten1","Huten2","Huten3","Huten4","Huten5","Huten6","Huten7","Huten8","Tenerife"]
   }
 ]
