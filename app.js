@@ -16,6 +16,7 @@ let locations = [];
 let markers = [];
 let routes = [];
 let routeLayers = [];
+let agitacionPoints = [];
 
 // DOM
 const infoPanel = document.getElementById("info-panel");
@@ -143,6 +144,43 @@ function getForecastLength() {
 
 function findLocationByName(name) {
   return locations.find(loc => loc.name === name) || null;
+}
+
+function findAgitacionPointByName(name) {
+  return agitacionPoints.find(point => point.name === name) || null;
+}
+
+function buildAgitacionIndex(point) {
+  const idx = new Map();
+  if (!point || !Array.isArray(point.forecast)) return idx;
+
+  point.forecast.forEach(f => {
+    if (f?.time) idx.set(f.time, f.hs_agitacion ?? null);
+  });
+
+  return idx;
+}
+
+function getAgitacionSeriesForLocation(location) {
+  if (!location || !Array.isArray(location.forecast)) return [];
+  const agitacionPoint = findAgitacionPointByName(location.name);
+  const agitacionIndex = buildAgitacionIndex(agitacionPoint);
+
+  return location.forecast.map(f => {
+    if (!f?.time) return null;
+    return agitacionIndex.has(f.time) ? agitacionIndex.get(f.time) : null;
+  });
+}
+
+function getSelectedLocationAgitacionAtHour() {
+  if (!selectedLocation) return null;
+  const series = getAgitacionSeriesForLocation(selectedLocation);
+  if (!series.length) return null;
+  return series[selectedHour] ?? null;
+}
+
+function hasAnyValidValue(values) {
+  return Array.isArray(values) && values.some(v => v !== null && v !== undefined && !Number.isNaN(v));
 }
 
 // ============================
@@ -300,10 +338,27 @@ Promise.all([
   fetch("./routes.json").then(res => {
     if (!res.ok) throw new Error(`HTTP ${res.status} cargando routes.json`);
     return res.json();
-  })
+  }),
+  fetch("./agitacion_points.json")
+    .then(res => {
+      if (!res.ok) {
+        console.warn(`No se pudo cargar agitacion_points.json (HTTP ${res.status})`);
+        return null;
+      }
+      return res.json();
+    })
+    .catch(err => {
+      console.warn("No se pudo cargar agitacion_points.json:", err);
+      return null;
+    })
 ])
-  .then(([meteoData, routesData]) => {
+  .then(([meteoData, routesData, agitacionData]) => {
     const rawPoints = Array.isArray(meteoData) ? meteoData : meteoData.points;
+    const rawAgitacionPoints = agitacionData
+      ? (Array.isArray(agitacionData) ? agitacionData : agitacionData.points || [])
+      : [];
+
+    agitacionPoints = rawAgitacionPoints;
 
     locations = rawPoints.map(point => ({
       name: point.name,
@@ -329,7 +384,7 @@ Promise.all([
     if (routes.length) {
       const firstValidRouteLayer = routeLayers[0];
       if (firstValidRouteLayer) {
-       // map.fitBounds(firstValidRouteLayer.polyline.getBounds(), { padding: [30, 30] });
+        // map.fitBounds(firstValidRouteLayer.polyline.getBounds(), { padding: [30, 30] });
       }
     }
   })
@@ -398,6 +453,8 @@ function renderLocationInfoPanel() {
   if (!selectedLocation) return;
 
   const f = selectedLocation.forecast[selectedHour];
+  const hsAgitacion = getSelectedLocationAgitacionAtHour();
+
   if (!f) {
     infoPanel.innerHTML = `
       <p><strong>Name:</strong> ${escapeHtml(selectedLocation.name)}</p>
@@ -412,6 +469,7 @@ function renderLocationInfoPanel() {
     <h3>${escapeHtml(selectedLocation.name)}</h3>
     <p><strong>Time:</strong> ${formatTimeLabel(f.time)}</p>
     <p><strong>Hs:</strong> ${formatNumber(f.wave)} m (${escapeHtml(f.waveSource)})</p>
+    <p><strong>Hs agitación:</strong> ${formatNumber(hsAgitacion)} m</p>
     <p><strong>Tp:</strong> ${formatNumber(f.tp)} s</p>
     <p><strong>Wave direction:</strong> ${formatNumber(f.dir)}°</p>
     <p><strong>Wind:</strong> ${formatNumber(f.windSpeed)} m/s</p>
@@ -597,11 +655,52 @@ function renderChart() {
   if (!selectedLocation || !waveChartCanvas) return;
 
   const forecast = selectedLocation.forecast;
-
   const labels = forecast.map(f => formatTimeLabel(f.time));
   const hsPde = forecast.map(f => f.wavePde);
   const hsCop = forecast.map(f => f.waveCopernicus);
   const dirPde = forecast.map(f => f.dirPde);
+  const hsAgitacion = getAgitacionSeriesForLocation(selectedLocation);
+
+  const datasets = [
+    {
+      label: "PdE",
+      data: hsPde,
+      borderColor: "#ef4444",
+      backgroundColor: "transparent",
+      borderWidth: 2.2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.25,
+      spanGaps: true
+    },
+    {
+      label: "Copernicus",
+      data: hsCop,
+      borderColor: "#2563eb",
+      backgroundColor: "transparent",
+      borderWidth: 2,
+      borderDash: [6, 4],
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.25,
+      spanGaps: true
+    }
+  ];
+
+  if (hasAnyValidValue(hsAgitacion)) {
+    datasets.push({
+      label: "Agitación",
+      data: hsAgitacion,
+      borderColor: "#6b7280",
+      backgroundColor: "transparent",
+      borderWidth: 2,
+      borderDash: [3, 3],
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.25,
+      spanGaps: true
+    });
+  }
 
   if (waveChart) {
     waveChart.destroy();
@@ -611,31 +710,7 @@ function renderChart() {
     type: "line",
     data: {
       labels,
-      datasets: [
-        {
-          label: "PdE",
-          data: hsPde,
-          borderColor: "#ef4444",
-          backgroundColor: "transparent",
-          borderWidth: 2.2,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          tension: 0.25,
-          spanGaps: true
-        },
-        {
-          label: "Copernicus",
-          data: hsCop,
-          borderColor: "#2563eb",
-          backgroundColor: "transparent",
-          borderWidth: 2,
-          borderDash: [6, 4],
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          tension: 0.25,
-          spanGaps: true
-        }
-      ]
+      datasets
     },
     options: {
       responsive: true,
@@ -647,7 +722,10 @@ function renderChart() {
       plugins: {
         legend: {
           labels: {
-            filter: item => item.text === "PdE" || item.text === "Copernicus"
+            filter: item =>
+              item.text === "PdE" ||
+              item.text === "Copernicus" ||
+              item.text === "Agitación"
           }
         },
         tooltip: {
@@ -663,13 +741,18 @@ function renderChart() {
 
               const idx = items[0].dataIndex;
               const f = forecast[idx];
-
-              return [
+              const rows = [
                 `Hs PdE: ${formatNumber(f.wavePde)} m`,
                 `Tp PdE: ${formatNumber(f.tpPde)} s`,
                 `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
                 `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`
               ];
+
+              if (hasAnyValidValue(hsAgitacion)) {
+                rows.push(`Hs Agitación: ${formatNumber(hsAgitacion[idx])} m`);
+              }
+
+              return rows;
             }
           }
         },
