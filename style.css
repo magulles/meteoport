@@ -157,3 +157,17 @@ body {
     padding: 10px;
   }
 }
+
+.leaflet-interactive:focus {
+  outline: none !important;
+}
+
+path.leaflet-interactive:focus {
+  outline: none !important;
+}
+
+.leaflet-container a:focus,
+.leaflet-container button:focus,
+.leaflet-container path:focus {
+  outline: none !important;
+}
