@@ -354,7 +354,7 @@ function initMarkers() {
     const color = f ? getColor(f.wave) : "#9ca3af";
 
     const marker = L.circleMarker(loc.coords, {
-      radius: 6,
+      radius: 4,
       color,
       fillColor: color,
       fillOpacity: 0.85,
