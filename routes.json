@@ -12,7 +12,7 @@
     "departure_time": "2026-03-26T08:00:00Z",
     "arrival_time": "2026-03-26T13:00:00Z",
     "points": ["Valencia", "Valbar1","Valbar2","Valbar3","Barcelona"]
-  }
+  },
   {
     "id": "ruta_3",
     "name": "Hue-Ten",
