@@ -25,6 +25,6 @@
     "name": "Mal-Mel",
     "departure_time": "2026-03-26T15:00:00Z",
     "arrival_time": "2026-03-26T21:30:00Z",
-    "points": ["Malaga", "Malmel1", "Malmel2", "Malmel3", "Malmel4", "Melilla"]
+    "points": ["Malaga","Malmel1","Malmel2","Malmel3","Malmel4","Melilla"]
   }
 ]
