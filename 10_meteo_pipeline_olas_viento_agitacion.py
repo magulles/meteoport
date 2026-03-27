@@ -925,6 +925,76 @@ PORT_MESHES = {
 PORT_MESH_PRIORITY = list(PORT_MESHES.keys())
 
 
+def get_coord_arrays(ds: xr.Dataset) -> Tuple[np.ndarray, np.ndarray]:
+    lon_candidates = ["lon", "longitude", "LON"]
+    lat_candidates = ["lat", "latitude", "LAT"]
+
+    lon_name = next((n for n in lon_candidates if n in ds.variables or n in ds.coords), None)
+    lat_name = next((n for n in lat_candidates if n in ds.variables or n in ds.coords), None)
+
+    if lon_name is None or lat_name is None:
+        raise KeyError("No se encontraron variables/coordenadas lon/lat en el dataset")
+
+    lons = np.asarray(ds[lon_name].values)
+    lats = np.asarray(ds[lat_name].values)
+    return lons, lats
+
+
+def get_nearest_indices_port(ds: xr.Dataset, points: List[Dict]) -> List[Tuple[int, int]]:
+    lons, lats = get_coord_arrays(ds)
+
+    if lons.ndim == 1 and lats.ndim == 1:
+        out = []
+        for p in points:
+            ilon = int(np.abs(lons - p["lon"]).argmin())
+            ilat = int(np.abs(lats - p["lat"]).argmin())
+            out.append((ilat, ilon))
+        return out
+
+    if lons.ndim == 2 and lats.ndim == 2:
+        out = []
+        for p in points:
+            dist2 = (lons - p["lon"]) ** 2 + (lats - p["lat"]) ** 2
+            flat_idx = int(np.nanargmin(dist2))
+            ilat, ilon = np.unravel_index(flat_idx, dist2.shape)
+            out.append((int(ilat), int(ilon)))
+        return out
+
+    raise ValueError(f"Dimensiones lon/lat no soportadas: lon={lons.ndim}, lat={lats.ndim}")
+
+
+def read_grid_lon_lat(lons: np.ndarray, lats: np.ndarray, ilat: int, ilon: int) -> Tuple[float, float]:
+    if lons.ndim == 1 and lats.ndim == 1:
+        return float(lons[ilon]), float(lats[ilat])
+    return float(lons[ilat, ilon]), float(lats[ilat, ilon])
+
+
+def extract_vhm0_value_port(ds: xr.Dataset, ilat: int, ilon: int):
+    arr = np.asarray(ds["VHM0"].values)
+    arr = np.squeeze(arr)
+
+    if arr.ndim != 2:
+        raise ValueError(f"VHM0 no es 2D tras squeeze; shape={arr.shape}")
+
+    if ilat < 0 or ilon < 0 or ilat >= arr.shape[0] or ilon >= arr.shape[1]:
+        return None
+
+    val = arr[ilat, ilon]
+
+    if np.ma.is_masked(val):
+        return None
+
+    try:
+        val = float(val)
+    except Exception:
+        return None
+
+    if np.isnan(val):
+        return None
+
+    return val
+
+
 def get_port_mesh_inventory() -> Dict[str, Dict]:
     inventory = {}
 
@@ -944,8 +1014,7 @@ def get_port_mesh_inventory() -> Dict[str, Dict]:
         ds, tmp_name = open_local_nc_from_url(sample_url)
 
         try:
-            lats = np.asarray(ds["latitude"].values, dtype=float)
-            lons = np.asarray(ds["longitude"].values, dtype=float)
+            lons, lats = get_coord_arrays(ds)
 
             inventory[mesh_key] = {
                 "key": mesh_key,
@@ -954,10 +1023,10 @@ def get_port_mesh_inventory() -> Dict[str, Dict]:
                 "latest_run": latest_run,
                 "files": files,
                 "sample_file": sample_name,
-                "lon_min": float(np.min(lons)),
-                "lon_max": float(np.max(lons)),
-                "lat_min": float(np.min(lats)),
-                "lat_max": float(np.max(lats)),
+                "lon_min": float(np.nanmin(lons)),
+                "lon_max": float(np.nanmax(lons)),
+                "lat_min": float(np.nanmin(lats)),
+                "lat_max": float(np.nanmax(lats)),
             }
         finally:
             try:
@@ -1034,13 +1103,11 @@ def download_port_agitation_for_mesh(points: List[Dict], mesh_meta: Dict):
 
             try:
                 if nearest_idxs is None:
-                    nearest_idxs = get_nearest_indices(ds, points)
-                    lats = ds["latitude"].values
-                    lons = ds["longitude"].values
+                    nearest_idxs = get_nearest_indices_port(ds, points)
+                    lons, lats = get_coord_arrays(ds)
 
                     for point, (ilat, ilon) in zip(points, nearest_idxs):
-                        grid_lon = float(lons[ilon])
-                        grid_lat = float(lats[ilat])
+                        grid_lon, grid_lat = read_grid_lon_lat(lons, lats, ilat, ilon)
                         point_meta[point["point_id"]] = {
                             "lon": grid_lon,
                             "lat": grid_lat,
@@ -1058,7 +1125,7 @@ def download_port_agitation_for_mesh(points: List[Dict], mesh_meta: Dict):
 
                     if "VHM0" in ds.variables:
                         rec["hs_port"] = round_or_none(
-                            ds["VHM0"].isel(time=0, latitude=ilat, longitude=ilon).values, 2
+                            extract_vhm0_value_port(ds, ilat, ilon), 2
                         )
                     else:
                         rec["hs_port"] = None
@@ -1174,8 +1241,6 @@ def download_port_agitation(points):
 
     out.sort(key=lambda x: x["point_id"])
     return out
-
-
 
 # =========================
 # 5) FUSIÓN FINAL
