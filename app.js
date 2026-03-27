@@ -57,6 +57,21 @@ function formatTimeLabel(isoTime) {
   return `${month}-${day}-${hour}h`;
 }
 
+function formatDateTimeLong(isoTime) {
+  if (!isoTime) return "--";
+
+  const d = new Date(isoTime);
+  const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+  const year = d.getUTCFullYear();
+  const month = months[d.getUTCMonth()];
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const hour = String(d.getUTCHours()).padStart(2, "0");
+  const min = String(d.getUTCMinutes()).padStart(2, "0");
+
+  return `${day} ${month} ${year} ${hour}:${min} UTC`;
+}
+
 function getColor(hs) {
   if (hs === null || hs === undefined || Number.isNaN(hs)) return "#9ca3af";
   if (hs <= THRESHOLDS.greenMax) return "green";
@@ -69,6 +84,13 @@ function getHexColorFromHs(hs) {
   if (hs <= THRESHOLDS.greenMax) return "#16a34a";
   if (hs <= THRESHOLDS.orangeMax) return "#f59e0b";
   return "#dc2626";
+}
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function getOperationalWave(f) {
@@ -124,6 +146,130 @@ function findLocationByName(name) {
 }
 
 // ============================
+// RUTAS
+// ============================
+
+function buildRoutes(rawRoutes) {
+  return (rawRoutes || []).map(route => {
+    const resolvedPoints = (route.points || [])
+      .map(pointName => {
+        const loc = findLocationByName(pointName);
+        return {
+          name: pointName,
+          loc
+        };
+      });
+
+    const validLocations = resolvedPoints
+      .filter(p => p.loc)
+      .map(p => p.loc);
+
+    return {
+      ...route,
+      resolvedPoints,
+      locations: validLocations
+    };
+  });
+}
+
+function calculateRouteSummary(route) {
+  if (!route || !route.locations || !route.locations.length) {
+    return { hasData: false, reason: "Ruta sin puntos válidos" };
+  }
+
+  const startMs = new Date(route.departure_time).getTime();
+  const endMs = new Date(route.arrival_time).getTime();
+
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) {
+    return { hasData: false, reason: "Ventana temporal inválida" };
+  }
+
+  let best = null;
+  let recordsInWindow = 0;
+
+  route.locations.forEach(loc => {
+    (loc.forecast || []).forEach(f => {
+      const t = new Date(f.time).getTime();
+      if (Number.isNaN(t)) return;
+      if (t < startMs || t > endMs) return;
+
+      recordsInWindow += 1;
+
+      if (f.wave === null || f.wave === undefined || Number.isNaN(f.wave)) return;
+
+      if (!best || f.wave > best.wave) {
+        best = {
+          locationName: loc.name,
+          time: f.time,
+          wave: f.wave,
+          tp: f.tp,
+          dir: f.dir,
+          waveSource: f.waveSource
+        };
+      }
+    });
+  });
+
+  if (!recordsInWindow) {
+    return { hasData: false, reason: "No hay datos en la ventana temporal de la ruta" };
+  }
+
+  if (!best) {
+    return { hasData: false, reason: "Hay registros en la ventana, pero sin oleaje válido" };
+  }
+
+  return { hasData: true, ...best };
+}
+
+function getRouteDisplayColor(route) {
+  const summary = calculateRouteSummary(route);
+  if (!summary.hasData) return "#64748b";
+  return getHexColorFromHs(summary.wave);
+}
+
+function updateRouteStyles() {
+  routeLayers.forEach(({ route, polyline }) => {
+    const isSelected = selectedRoute && selectedRoute.id === route.id;
+    const color = getRouteDisplayColor(route);
+
+    polyline.setStyle({
+      color,
+      weight: isSelected ? 5 : 3,
+      opacity: isSelected ? 0.95 : 0.75
+    });
+  });
+}
+
+function initRoutes() {
+  routeLayers.forEach(({ polyline }) => map.removeLayer(polyline));
+  routeLayers = [];
+
+  routes.forEach(route => {
+    const latlngs = route.locations.map(loc => loc.coords);
+    if (latlngs.length < 2) return;
+
+    const polyline = L.polyline(latlngs, {
+      color: getRouteDisplayColor(route),
+      weight: 3,
+      opacity: 0.75
+    }).addTo(map);
+
+    polyline.bindTooltip(route.name, { direction: "top", sticky: true });
+
+    polyline.on("click", () => {
+      selectedRoute = route;
+      selectedLocation = null;
+      updateRouteStyles();
+      updateInfoPanel();
+    });
+
+    routeLayers.push({ route, polyline });
+  });
+
+  updateRouteStyles();
+}
+
+// ============================
 // CARGA DATOS
 // ============================
 
@@ -147,14 +293,26 @@ Promise.all([
       forecast: buildMergedForecast(point)
     }));
 
-    routes = routesData;
+    if (!locations.length) {
+      throw new Error("No hay puntos en meteo_points.json");
+    }
+
+    routes = buildRoutes(routesData);
 
     const maxHour = Math.max(0, getForecastLength() - 1);
     hourSlider.max = maxHour;
     hourSlider.value = selectedHour;
 
     initMarkers();
+    initRoutes();
     updateHourLabel();
+  })
+  .catch(err => {
+    console.error(err);
+    infoPanel.innerHTML = `
+      <p><strong>Error cargando datos</strong></p>
+      <p>${escapeHtml(err.message)}</p>
+    `;
   });
 
 // ============================
@@ -177,8 +335,12 @@ function initMarkers() {
       weight: 2
     }).addTo(map);
 
+    marker.bindTooltip(loc.name, { direction: "top", offset: [0, -6] });
+
     marker.on("click", () => {
       selectedLocation = loc;
+      selectedRoute = null;
+      updateRouteStyles();
       updateInfoPanel();
       renderChart();
     });
@@ -200,25 +362,82 @@ function updateMarkers() {
 // PANEL
 // ============================
 
-function updateInfoPanel() {
+function renderLocationInfoPanel() {
   if (!selectedLocation) return;
 
   const f = selectedLocation.forecast[selectedHour];
 
+  if (!f) {
+    infoPanel.innerHTML = `
+      <p><strong>Name:</strong> ${escapeHtml(selectedLocation.name)}</p>
+      <p><strong>No data for this time</strong></p>
+    `;
+    return;
+  }
+
+  const statusColor = getColor(f.wave);
+
   infoPanel.innerHTML = `
-    <h3>${selectedLocation.name}</h3>
-    <p>Hs: ${formatNumber(f.wave)} m</p>
-    <p>Tp: ${formatNumber(f.tp)} s</p>
-    <p>Dir: ${formatNumber(f.dir)}°</p>
+    <h3>${escapeHtml(selectedLocation.name)}</h3>
+    <p><strong>Time:</strong> ${formatTimeLabel(f.time)}</p>
+    <p><strong>Hs:</strong> ${formatNumber(f.wave)} m (${escapeHtml(f.waveSource)})</p>
+    <p><strong>Tp:</strong> ${formatNumber(f.tp)} s</p>
+    <p><strong>Wave direction:</strong> ${formatNumber(f.dir)}°</p>
+    <p><strong>Wind:</strong> ${formatNumber(f.windSpeed)} m/s</p>
+    <p><strong>Wind direction:</strong> ${formatNumber(f.windDir)}°</p>
+    <p><strong>Status:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
   `;
 }
 
+function renderRouteInfoPanel() {
+  if (!selectedRoute) return;
+
+  const summary = calculateRouteSummary(selectedRoute);
+  const missingPoints = selectedRoute.resolvedPoints.filter(p => !p.loc).map(p => p.name);
+  const pointsLabel = selectedRoute.resolvedPoints.map(p => p.name).join(" → ");
+
+  if (!summary.hasData) {
+    infoPanel.innerHTML = `...`;
+    return;
+  }
+
+  const statusColor = getColor(summary.wave);
+
+  infoPanel.innerHTML = `
+    <h3>${escapeHtml(selectedRoute.name)}</h3>
+    <p><strong>Salida:</strong> ${formatDateTimeLong(selectedRoute.departure_time)}</p>
+    <p><strong>Llegada:</strong> ${formatDateTimeLong(selectedRoute.arrival_time)}</p>
+    <p><strong>Puntos:</strong> ${escapeHtml(pointsLabel)}</p>
+    <hr style="margin:10px 0;">
+    <p><strong>Hsmax ruta:</strong> ${formatNumber(summary.wave)} m (${escapeHtml(summary.waveSource)})</p>
+    <p><strong>Tp asociado:</strong> ${formatNumber(summary.tp)} s</p>
+    <p><strong>Dirección asociada:</strong> ${formatNumber(summary.dir)}°</p>
+    <p><strong>Ocurre en:</strong> ${escapeHtml(summary.locationName)}</p>
+    <p><strong>Hora:</strong> ${formatDateTimeLong(summary.time)}</p>
+    <p><strong>Estado:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
+  `;
+}
+
+function updateInfoPanel() {
+  if (selectedRoute) {
+    renderRouteInfoPanel();
+    return;
+  }
+
+  if (selectedLocation) {
+    renderLocationInfoPanel();
+    return;
+  }
+
+  infoPanel.innerHTML = `<p><strong>Selecciona un punto o una ruta</strong></p>`;
+}
+
 // ============================
-// GRÁFICA
+// CHART
 // ============================
 
 function renderChart() {
-  if (!selectedLocation) return;
+  if (!selectedLocation || !waveChartCanvas) return;
 
   const forecast = selectedLocation.forecast;
   const labels = forecast.map(f => formatTimeLabel(f.time));
@@ -232,14 +451,8 @@ function renderChart() {
     data: {
       labels,
       datasets: [
-        {
-          label: "PdE",
-          data: hsPde
-        },
-        {
-          label: "Copernicus",
-          data: hsCop
-        }
+        { label: "PdE", data: hsPde, borderColor: "#ef4444" },
+        { label: "Copernicus", data: hsCop, borderColor: "#2563eb" }
       ]
     }
   });
@@ -251,6 +464,7 @@ function renderChart() {
 
 hourSlider.addEventListener("input", e => {
   selectedHour = parseInt(e.target.value, 10);
+
   updateMarkers();
   updateInfoPanel();
   updateHourLabel();
@@ -262,7 +476,8 @@ function updateHourLabel() {
     return;
   }
 
-  const f = locations[0]?.forecast?.[selectedHour];
+  const refLocation = selectedLocation || locations[0];
+  const f = refLocation?.forecast?.[selectedHour];
+
   hourLabel.innerText = f?.time ? formatTimeLabel(f.time) : "--";
 }
-
