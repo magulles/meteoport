@@ -43,3 +43,6 @@ Malmel4  -2.932691  35.592250
 Denibisur1   1.193140  38.575788
 Denibisur2   1.662791  38.614749
 Denibiestrecho   1.417794  38.805696
+Val_puerto   -0.311294  39.441685
+Bar_puerto    2.165618  41.341648
+
