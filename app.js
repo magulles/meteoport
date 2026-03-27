@@ -433,7 +433,111 @@ function updateInfoPanel() {
 }
 
 // ============================
-// CHART
+// CHART PLUGIN: VERTICAL LINE
+// ============================
+
+const verticalCursorPlugin = {
+  id: "verticalCursorPlugin",
+  afterDraw(chart, args, options) {
+    const selectedIndex = options?.selectedIndex ?? 0;
+    const xScale = chart.scales.x;
+    const yScale = chart.scales.y;
+
+    if (!xScale || !yScale) return;
+    if (selectedIndex < 0 || selectedIndex >= chart.data.labels.length) return;
+
+    const x = xScale.getPixelForValue(selectedIndex);
+    const topY = chart.chartArea.top;
+    const bottomY = chart.chartArea.bottom;
+    const ctx = chart.ctx;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, topY);
+    ctx.lineTo(x, bottomY);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#9ca3af";
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+// ============================
+// CHART PLUGIN: PDE WAVE ARROWS
+// ============================
+
+const pdeWaveArrowsPlugin = {
+  id: "pdeWaveArrowsPlugin",
+  afterDatasetsDraw(chart, args, options) {
+    const datasetIndex = options?.datasetIndex ?? 0;
+    const directions = options?.directions ?? [];
+    const yOffsetPx = options?.yOffsetPx ?? 16;
+    const arrowLengthPx = options?.arrowLengthPx ?? 14;
+    const arrowHeadPx = options?.arrowHeadPx ?? 5;
+    const lineWidth = options?.lineWidth ?? 1.4;
+    const color = options?.color ?? "#374151";
+
+    const meta = chart.getDatasetMeta(datasetIndex);
+    const dataset = chart.data.datasets?.[datasetIndex];
+    const ctx = chart.ctx;
+
+    if (!meta || !dataset || meta.hidden) return;
+    if (!meta.data || !meta.data.length) return;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = lineWidth;
+
+    meta.data.forEach((pointEl, i) => {
+      const hsValue = dataset.data[i];
+      const dirFrom = directions[i];
+
+      if (hsValue === null || hsValue === undefined || Number.isNaN(hsValue)) return;
+      if (dirFrom === null || dirFrom === undefined || Number.isNaN(dirFrom)) return;
+
+      const x = pointEl.x;
+      const y = pointEl.y - yOffsetPx;
+
+      const arrowBearing = (dirFrom + 180) % 360;
+      const rad = arrowBearing * Math.PI / 180;
+      const dx = arrowLengthPx * Math.sin(rad);
+      const dy = -arrowLengthPx * Math.cos(rad);
+
+      const x1 = x - dx / 2;
+      const y1 = y - dy / 2;
+      const x2 = x + dx / 2;
+      const y2 = y + dy / 2;
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const a1 = angle + Math.PI * 0.82;
+      const a2 = angle - Math.PI * 0.82;
+
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(
+        x2 + arrowHeadPx * Math.cos(a1),
+        y2 + arrowHeadPx * Math.sin(a1)
+      );
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(
+        x2 + arrowHeadPx * Math.cos(a2),
+        y2 + arrowHeadPx * Math.sin(a2)
+      );
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  }
+};
+
+// ============================
+// GRÁFICA
 // ============================
 
 function renderChart() {
@@ -443,19 +547,102 @@ function renderChart() {
   const labels = forecast.map(f => formatTimeLabel(f.time));
   const hsPde = forecast.map(f => f.wavePde);
   const hsCop = forecast.map(f => f.waveCopernicus);
+  const dirPde = forecast.map(f => f.dirPde);
 
-  if (waveChart) waveChart.destroy();
+  if (waveChart) {
+    waveChart.destroy();
+  }
 
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
       labels,
       datasets: [
-        { label: "PdE", data: hsPde, borderColor: "#ef4444" },
-        { label: "Copernicus", data: hsCop, borderColor: "#2563eb" }
+        {
+          label: "PdE",
+          data: hsPde,
+          borderColor: "#ef4444",
+          backgroundColor: "transparent",
+          borderWidth: 2.2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          tension: 0.25,
+          spanGaps: true
+        },
+        {
+          label: "Copernicus",
+          data: hsCop,
+          borderColor: "#2563eb",
+          backgroundColor: "transparent",
+          borderWidth: 2,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          tension: 0.25,
+          spanGaps: true
+        }
       ]
-    }
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            title: items => {
+              if (!items.length) return "";
+              const idx = items[0].dataIndex;
+              return forecast[idx]?.time || "";
+            },
+            label: () => "",
+            afterBody: items => {
+              if (!items.length) return [];
+
+              const idx = items[0].dataIndex;
+              const f = forecast[idx];
+              return [
+                `Hs PdE: ${formatNumber(f.wavePde)} m`,
+                `Tp PdE: ${formatNumber(f.tpPde)} s`,
+                `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
+                `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`
+              ];
+            }
+          }
+        },
+        verticalCursorPlugin: {
+          selectedIndex: selectedHour
+        },
+        pdeWaveArrowsPlugin: {
+          datasetIndex: 0,
+          directions: dirPde
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: "#eef2f7" }
+        },
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: "Hs (m)"
+          },
+          grid: { color: "#e5e7eb" }
+        }
+      }
+    },
+    plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin]
   });
+}
+
+function updateChartCursorOnly() {
+  if (!waveChart) return;
+  waveChart.options.plugins.verticalCursorPlugin.selectedIndex = selectedHour;
+  waveChart.update("none");
 }
 
 // ============================
