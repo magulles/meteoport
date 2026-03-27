@@ -38,6 +38,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add wave_points.json wind_10m_forecast.json meteo_points.json
+          git add *.json
           git diff --cached --quiet || git commit -m "Update meteo data"
           git push
