@@ -1,10 +1,17 @@
 [
   {
     "id": "ruta_1",
+    "name": "Denia-Ibiza",
+    "departure_time": "2026-03-27T17:00:00Z",
+    "arrival_time": "2026-03-27T19:00:00Z",
+    "points": ["Denia","Deniaibi", "Ibiza"]
+  },
+  {
+    "id": "ruta_5",
     "name": "Denia-Palma",
     "departure_time": "2026-03-27T07:00:00Z",
     "arrival_time": "2026-03-27T12:00:00Z",
-    "points": ["Denia","Deniaibi", "Ibiza","ibima1","ibima2","Palma"]
+    "points": ["Ibiza","ibima1","ibima2","Palma"]
   },
   {
     "id": "ruta_2",
