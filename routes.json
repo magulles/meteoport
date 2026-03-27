@@ -11,7 +11,7 @@
     "name": "Denia-Ibizaalt",
     "departure_time": "2026-03-27T17:00:00Z",
     "arrival_time": "2026-03-27T19:00:00Z",
-    "points": ["Denia","Deniaibi", "Denibisur1","Denibisur2"]
+    "points": ["Denia","Deniaibi", "Denibisur1","Denibisur2", "Ibiza"]
   },
   {
     "id": "ruta_3",
