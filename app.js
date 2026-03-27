@@ -16,7 +16,6 @@ let locations = [];
 let markers = [];
 let routes = [];
 let routeLayers = [];
-let agitacionPoints = [];
 
 // DOM
 const infoPanel = document.getElementById("info-panel");
@@ -58,21 +57,6 @@ function formatTimeLabel(isoTime) {
   return `${month}-${day}-${hour}h`;
 }
 
-function formatDateTimeLong(isoTime) {
-  if (!isoTime) return "--";
-
-  const d = new Date(isoTime);
-  const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-
-  const year = d.getUTCFullYear();
-  const month = months[d.getUTCMonth()];
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const hour = String(d.getUTCHours()).padStart(2, "0");
-  const min = String(d.getUTCMinutes()).padStart(2, "0");
-
-  return `${day} ${month} ${year} ${hour}:${min} UTC`;
-}
-
 function getColor(hs) {
   if (hs === null || hs === undefined || Number.isNaN(hs)) return "#9ca3af";
   if (hs <= THRESHOLDS.greenMax) return "green";
@@ -85,13 +69,6 @@ function getHexColorFromHs(hs) {
   if (hs <= THRESHOLDS.greenMax) return "#16a34a";
   if (hs <= THRESHOLDS.orangeMax) return "#f59e0b";
   return "#dc2626";
-}
-
-function escapeHtml(text) {
-  return String(text ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 function getOperationalWave(f) {
@@ -146,186 +123,6 @@ function findLocationByName(name) {
   return locations.find(loc => loc.name === name) || null;
 }
 
-function findAgitacionPointByName(name) {
-  return agitacionPoints.find(point => point.name === name) || null;
-}
-
-function buildAgitacionIndex(point) {
-  const idx = new Map();
-  if (!point || !Array.isArray(point.forecast)) return idx;
-
-  point.forecast.forEach(f => {
-    if (f?.time) idx.set(f.time, f.hs_agitacion ?? null);
-  });
-
-  return idx;
-}
-
-function getAgitacionSeriesForLocation(location) {
-  if (!location || !Array.isArray(location.forecast)) return [];
-  const agitacionPoint = findAgitacionPointByName(location.name);
-  const agitacionIndex = buildAgitacionIndex(agitacionPoint);
-
-  return location.forecast.map(f => {
-    if (!f?.time) return null;
-    return agitacionIndex.has(f.time) ? agitacionIndex.get(f.time) : null;
-  });
-}
-
-function getSelectedLocationAgitacionAtHour() {
-  if (!selectedLocation) return null;
-  const series = getAgitacionSeriesForLocation(selectedLocation);
-  if (!series.length) return null;
-  return series[selectedHour] ?? null;
-}
-
-function hasAnyValidValue(values) {
-  return Array.isArray(values) && values.some(v => v !== null && v !== undefined && !Number.isNaN(v));
-}
-
-// ============================
-// RUTAS
-// ============================
-
-function buildRoutes(rawRoutes) {
-  return (rawRoutes || []).map(route => {
-    const resolvedPoints = (route.points || [])
-      .map(pointName => {
-        const loc = findLocationByName(pointName);
-        return {
-          name: pointName,
-          loc
-        };
-      });
-
-    const validLocations = resolvedPoints
-      .filter(p => p.loc)
-      .map(p => p.loc);
-
-    return {
-      ...route,
-      resolvedPoints,
-      locations: validLocations
-    };
-  });
-}
-
-function calculateRouteSummary(route) {
-  if (!route || !route.locations || !route.locations.length) {
-    return {
-      hasData: false,
-      reason: "Ruta sin puntos válidos"
-    };
-  }
-
-  const startMs = new Date(route.departure_time).getTime();
-  const endMs = new Date(route.arrival_time).getTime();
-
-  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) {
-    return {
-      hasData: false,
-      reason: "Ventana temporal inválida"
-    };
-  }
-
-  let best = null;
-  let recordsInWindow = 0;
-
-  route.locations.forEach(loc => {
-    (loc.forecast || []).forEach(f => {
-      const t = new Date(f.time).getTime();
-      if (Number.isNaN(t)) return;
-      if (t < startMs || t > endMs) return;
-
-      recordsInWindow += 1;
-
-      if (f.wave === null || f.wave === undefined || Number.isNaN(f.wave)) return;
-
-      if (!best || f.wave > best.wave) {
-        best = {
-          locationName: loc.name,
-          time: f.time,
-          wave: f.wave,
-          tp: f.tp,
-          dir: f.dir,
-          waveSource: f.waveSource
-        };
-      }
-    });
-  });
-
-  if (!recordsInWindow) {
-    return {
-      hasData: false,
-      reason: "No hay datos en la ventana temporal de la ruta"
-    };
-  }
-
-  if (!best) {
-    return {
-      hasData: false,
-      reason: "Hay registros en la ventana, pero sin oleaje válido"
-    };
-  }
-
-  return {
-    hasData: true,
-    ...best
-  };
-}
-
-function getRouteDisplayColor(route) {
-  const summary = calculateRouteSummary(route);
-  if (!summary.hasData) return "#64748b";
-  return getHexColorFromHs(summary.wave);
-}
-
-function updateRouteStyles() {
-  routeLayers.forEach(({ route, polyline }) => {
-    const isSelected = selectedRoute && selectedRoute.id === route.id;
-    const color = getRouteDisplayColor(route);
-
-    polyline.setStyle({
-      color,
-      weight: isSelected ? 5 : 3,
-      opacity: isSelected ? 0.95 : 0.75
-    });
-  });
-}
-
-function initRoutes() {
-  routeLayers.forEach(({ polyline }) => map.removeLayer(polyline));
-  routeLayers = [];
-
-  routes.forEach(route => {
-    const latlngs = route.locations.map(loc => loc.coords);
-
-    if (latlngs.length < 2) return;
-
-    const polyline = L.polyline(latlngs, {
-      color: getRouteDisplayColor(route),
-      weight: 3,
-      opacity: 0.75
-    }).addTo(map);
-
-    polyline.bindTooltip(route.name, {
-      direction: "top",
-      sticky: true
-    });
-
-    polyline.on("click", () => {
-      selectedRoute = route;
-      selectedLocation = null;
-      updateRouteStyles();
-      updateInfoPanel();
-    });
-
-    routeLayers.push({ route, polyline });
-  });
-
-  updateRouteStyles();
-}
-
 // ============================
 // CARGA DATOS
 // ============================
@@ -338,27 +135,10 @@ Promise.all([
   fetch("./routes.json").then(res => {
     if (!res.ok) throw new Error(`HTTP ${res.status} cargando routes.json`);
     return res.json();
-  }),
-  fetch("./agitacion_points.json")
-    .then(res => {
-      if (!res.ok) {
-        console.warn(`No se pudo cargar agitacion_points.json (HTTP ${res.status})`);
-        return null;
-      }
-      return res.json();
-    })
-    .catch(err => {
-      console.warn("No se pudo cargar agitacion_points.json:", err);
-      return null;
-    })
+  })
 ])
-  .then(([meteoData, routesData, agitacionData]) => {
+  .then(([meteoData, routesData]) => {
     const rawPoints = Array.isArray(meteoData) ? meteoData : meteoData.points;
-    const rawAgitacionPoints = agitacionData
-      ? (Array.isArray(agitacionData) ? agitacionData : agitacionData.points || [])
-      : [];
-
-    agitacionPoints = rawAgitacionPoints;
 
     locations = rawPoints.map(point => ({
       name: point.name,
@@ -367,33 +147,14 @@ Promise.all([
       forecast: buildMergedForecast(point)
     }));
 
-    if (!locations.length) {
-      throw new Error("No hay puntos en meteo_points.json");
-    }
-
-    routes = buildRoutes(routesData);
+    routes = routesData;
 
     const maxHour = Math.max(0, getForecastLength() - 1);
     hourSlider.max = maxHour;
     hourSlider.value = selectedHour;
 
     initMarkers();
-    initRoutes();
     updateHourLabel();
-
-    if (routes.length) {
-      const firstValidRouteLayer = routeLayers[0];
-      if (firstValidRouteLayer) {
-        // map.fitBounds(firstValidRouteLayer.polyline.getBounds(), { padding: [30, 30] });
-      }
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    infoPanel.innerHTML = `
-      <p><strong>Error cargando datos</strong></p>
-      <p>${escapeHtml(err.message)}</p>
-    `;
   });
 
 // ============================
@@ -416,15 +177,8 @@ function initMarkers() {
       weight: 2
     }).addTo(map);
 
-    marker.bindTooltip(loc.name, {
-      direction: "top",
-      offset: [0, -6]
-    });
-
     marker.on("click", () => {
       selectedLocation = loc;
-      selectedRoute = null;
-      updateRouteStyles();
       updateInfoPanel();
       renderChart();
     });
@@ -438,10 +192,7 @@ function updateMarkers() {
     const f = loc.forecast[selectedHour];
     const color = f ? getColor(f.wave) : "#9ca3af";
 
-    marker.setStyle({
-      color,
-      fillColor: color
-    });
+    marker.setStyle({ color, fillColor: color });
   });
 }
 
@@ -449,357 +200,49 @@ function updateMarkers() {
 // PANEL
 // ============================
 
-function renderLocationInfoPanel() {
+function updateInfoPanel() {
   if (!selectedLocation) return;
 
   const f = selectedLocation.forecast[selectedHour];
-  const hsAgitacion = getSelectedLocationAgitacionAtHour();
-
-  if (!f) {
-    infoPanel.innerHTML = `
-      <p><strong>Name:</strong> ${escapeHtml(selectedLocation.name)}</p>
-      <p><strong>No data for this time</strong></p>
-    `;
-    return;
-  }
-
-  const statusColor = getColor(f.wave);
 
   infoPanel.innerHTML = `
-    <h3>${escapeHtml(selectedLocation.name)}</h3>
-    <p><strong>Time:</strong> ${formatTimeLabel(f.time)}</p>
-    <p><strong>Hs:</strong> ${formatNumber(f.wave)} m (${escapeHtml(f.waveSource)})</p>
-    <p><strong>Hs agitación:</strong> ${formatNumber(hsAgitacion)} m</p>
-    <p><strong>Tp:</strong> ${formatNumber(f.tp)} s</p>
-    <p><strong>Wave direction:</strong> ${formatNumber(f.dir)}°</p>
-    <p><strong>Wind:</strong> ${formatNumber(f.windSpeed)} m/s</p>
-    <p><strong>Wind direction:</strong> ${formatNumber(f.windDir)}°</p>
-    <p><strong>Status:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
+    <h3>${selectedLocation.name}</h3>
+    <p>Hs: ${formatNumber(f.wave)} m</p>
+    <p>Tp: ${formatNumber(f.tp)} s</p>
+    <p>Dir: ${formatNumber(f.dir)}°</p>
   `;
 }
-
-function renderRouteInfoPanel() {
-  if (!selectedRoute) return;
-
-  const summary = calculateRouteSummary(selectedRoute);
-  const missingPoints = selectedRoute.resolvedPoints.filter(p => !p.loc).map(p => p.name);
-  const pointsLabel = selectedRoute.resolvedPoints.map(p => p.name).join(" → ");
-
-  if (!summary.hasData) {
-    infoPanel.innerHTML = `
-      <h3>${escapeHtml(selectedRoute.name)}</h3>
-      <p><strong>Salida:</strong> ${formatDateTimeLong(selectedRoute.departure_time)}</p>
-      <p><strong>Llegada:</strong> ${formatDateTimeLong(selectedRoute.arrival_time)}</p>
-      <p><strong>Puntos:</strong> ${escapeHtml(pointsLabel)}</p>
-      <p><strong>Hsmax ruta:</strong> -</p>
-      <p><strong>Tp asociado:</strong> -</p>
-      <p><strong>Dirección asociada:</strong> -</p>
-      <p><strong>Estado:</strong> <span style="color:#64748b; font-weight:700;">SIN DATOS</span></p>
-      <p style="margin-top:10px;"><strong>Detalle:</strong> ${escapeHtml(summary.reason)}</p>
-      ${
-        missingPoints.length
-          ? `<p><strong>Puntos no encontrados:</strong> ${escapeHtml(missingPoints.join(", "))}</p>`
-          : ""
-      }
-    `;
-    return;
-  }
-
-  const statusColor = getColor(summary.wave);
-
-  infoPanel.innerHTML = `
-    <h3>${escapeHtml(selectedRoute.name)}</h3>
-    <p><strong>Salida:</strong> ${formatDateTimeLong(selectedRoute.departure_time)}</p>
-    <p><strong>Llegada:</strong> ${formatDateTimeLong(selectedRoute.arrival_time)}</p>
-    <p><strong>Puntos:</strong> ${escapeHtml(pointsLabel)}</p>
-    <hr style="margin:10px 0;">
-    <p><strong>Hsmax ruta:</strong> ${formatNumber(summary.wave)} m (${escapeHtml(summary.waveSource)})</p>
-    <p><strong>Tp asociado:</strong> ${formatNumber(summary.tp)} s</p>
-    <p><strong>Dirección asociada:</strong> ${formatNumber(summary.dir)}°</p>
-    <p><strong>Ocurre en:</strong> ${escapeHtml(summary.locationName)}</p>
-    <p><strong>Hora:</strong> ${formatDateTimeLong(summary.time)}</p>
-    <p><strong>Estado:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
-    ${
-      missingPoints.length
-        ? `<p><strong>Puntos no encontrados:</strong> ${escapeHtml(missingPoints.join(", "))}</p>`
-        : ""
-    }
-  `;
-}
-
-function updateInfoPanel() {
-  if (selectedRoute) {
-    renderRouteInfoPanel();
-    return;
-  }
-
-  if (selectedLocation) {
-    renderLocationInfoPanel();
-    return;
-  }
-
-  infoPanel.innerHTML = `
-    <p><strong>Selecciona un punto o una ruta</strong></p>
-  `;
-}
-
-// ============================
-// CHART PLUGIN: VERTICAL LINE
-// ============================
-
-const verticalCursorPlugin = {
-  id: "verticalCursorPlugin",
-  afterDraw(chart, args, options) {
-    const selectedIndex = options?.selectedIndex ?? 0;
-    const xScale = chart.scales.x;
-    const yScale = chart.scales.y;
-
-    if (!xScale || !yScale) return;
-    if (selectedIndex < 0 || selectedIndex >= chart.data.labels.length) return;
-
-    const x = xScale.getPixelForValue(selectedIndex);
-    const topY = chart.chartArea.top;
-    const bottomY = chart.chartArea.bottom;
-    const ctx = chart.ctx;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(x, topY);
-    ctx.lineTo(x, bottomY);
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = "#9ca3af";
-    ctx.stroke();
-    ctx.restore();
-  }
-};
-
-// ============================
-// CHART PLUGIN: PDE WAVE ARROWS
-// ============================
-
-const pdeWaveArrowsPlugin = {
-  id: "pdeWaveArrowsPlugin",
-  afterDatasetsDraw(chart, args, options) {
-    const datasetIndex = options?.datasetIndex ?? 0;
-    const directions = options?.directions ?? [];
-    const yOffsetPx = options?.yOffsetPx ?? 16;
-    const arrowLengthPx = options?.arrowLengthPx ?? 14;
-    const arrowHeadPx = options?.arrowHeadPx ?? 5;
-    const lineWidth = options?.lineWidth ?? 1.4;
-    const color = options?.color ?? "#ef4420";
-
-    const meta = chart.getDatasetMeta(datasetIndex);
-    const dataset = chart.data.datasets?.[datasetIndex];
-    const ctx = chart.ctx;
-
-    if (!meta || !dataset || meta.hidden) return;
-    if (!meta.data || !meta.data.length) return;
-
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    ctx.lineWidth = lineWidth;
-
-    meta.data.forEach((pointEl, i) => {
-      const hsValue = dataset.data[i];
-      const dirFrom = directions[i];
-
-      if (hsValue === null || hsValue === undefined || Number.isNaN(hsValue)) return;
-      if (dirFrom === null || dirFrom === undefined || Number.isNaN(dirFrom)) return;
-
-      const x = pointEl.x;
-      const y = pointEl.y - yOffsetPx;
-
-      const arrowBearing = (dirFrom + 180) % 360;
-      const rad = arrowBearing * Math.PI / 180;
-      const dx = arrowLengthPx * Math.sin(rad);
-      const dy = -arrowLengthPx * Math.cos(rad);
-
-      const x1 = x - dx / 2;
-      const y1 = y - dy / 2;
-      const x2 = x + dx / 2;
-      const y2 = y + dy / 2;
-
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-
-      const angle = Math.atan2(y2 - y1, x2 - x1);
-      const a1 = angle + Math.PI * 0.82;
-      const a2 = angle - Math.PI * 0.82;
-
-      ctx.beginPath();
-      ctx.moveTo(x2, y2);
-      ctx.lineTo(
-        x2 + arrowHeadPx * Math.cos(a1),
-        y2 + arrowHeadPx * Math.sin(a1)
-      );
-      ctx.moveTo(x2, y2);
-      ctx.lineTo(
-        x2 + arrowHeadPx * Math.cos(a2),
-        y2 + arrowHeadPx * Math.sin(a2)
-      );
-      ctx.stroke();
-    });
-
-    ctx.restore();
-  }
-};
 
 // ============================
 // GRÁFICA
 // ============================
 
 function renderChart() {
-  if (!selectedLocation || !waveChartCanvas) return;
+  if (!selectedLocation) return;
 
   const forecast = selectedLocation.forecast;
   const labels = forecast.map(f => formatTimeLabel(f.time));
   const hsPde = forecast.map(f => f.wavePde);
   const hsCop = forecast.map(f => f.waveCopernicus);
-  const dirPde = forecast.map(f => f.dirPde);
-  const hsAgitacion = getAgitacionSeriesForLocation(selectedLocation);
 
-  const datasets = [
-    {
-      label: "PdE",
-      data: hsPde,
-      borderColor: "#ef4444",
-      backgroundColor: "transparent",
-      borderWidth: 2.2,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      tension: 0.25,
-      spanGaps: true
-    },
-    {
-      label: "Copernicus",
-      data: hsCop,
-      borderColor: "#2563eb",
-      backgroundColor: "transparent",
-      borderWidth: 2,
-      borderDash: [6, 4],
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      tension: 0.25,
-      spanGaps: true
-    }
-  ];
-
-  if (hasAnyValidValue(hsAgitacion)) {
-    datasets.push({
-      label: "Agitación",
-      data: hsAgitacion,
-      borderColor: "#6b7280",
-      backgroundColor: "transparent",
-      borderWidth: 2,
-      borderDash: [3, 3],
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      tension: 0.25,
-      spanGaps: true
-    });
-  }
-
-  if (waveChart) {
-    waveChart.destroy();
-  }
+  if (waveChart) waveChart.destroy();
 
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
       labels,
-      datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: "index",
-        intersect: false
-      },
-      plugins: {
-        legend: {
-          labels: {
-            filter: item =>
-              item.text === "PdE" ||
-              item.text === "Copernicus" ||
-              item.text === "Agitación"
-          }
+      datasets: [
+        {
+          label: "PdE",
+          data: hsPde
         },
-        tooltip: {
-          callbacks: {
-            title: items => {
-              if (!items.length) return "";
-              const idx = items[0].dataIndex;
-              return forecast[idx]?.time || "";
-            },
-            label: () => "",
-            afterBody: items => {
-              if (!items.length) return [];
-
-              const idx = items[0].dataIndex;
-              const f = forecast[idx];
-              const rows = [
-                `Hs PdE: ${formatNumber(f.wavePde)} m`,
-                `Tp PdE: ${formatNumber(f.tpPde)} s`,
-                `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
-                `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`
-              ];
-
-              if (hasAnyValidValue(hsAgitacion)) {
-                rows.push(`Hs Agitación: ${formatNumber(hsAgitacion[idx])} m`);
-              }
-
-              return rows;
-            }
-          }
-        },
-        verticalCursorPlugin: {
-          selectedIndex: selectedHour
-        },
-        pdeWaveArrowsPlugin: {
-          datasetIndex: 0,
-          directions: dirPde,
-          yOffsetPx: 16,
-          arrowLengthPx: 14,
-          arrowHeadPx: 5,
-          lineWidth: 1.4,
-          color: "#374151"
+        {
+          label: "Copernicus",
+          data: hsCop
         }
-      },
-      scales: {
-        x: {
-          grid: {
-            color: "#eef2f7"
-          },
-          ticks: {
-            maxTicksLimit: 16,
-            maxRotation: 55,
-            minRotation: 55
-          }
-        },
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: "Hs (m)"
-          },
-          grid: {
-            color: "#e5e7eb"
-          }
-        }
-      }
-    },
-    plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin]
+      ]
+    }
   });
-}
-
-function updateChartCursorOnly() {
-  if (!waveChart) return;
-  waveChart.options.plugins.verticalCursorPlugin.selectedIndex = selectedHour;
-  waveChart.update("none");
 }
 
 // ============================
@@ -808,11 +251,9 @@ function updateChartCursorOnly() {
 
 hourSlider.addEventListener("input", e => {
   selectedHour = parseInt(e.target.value, 10);
-
   updateMarkers();
   updateInfoPanel();
   updateHourLabel();
-  updateChartCursorOnly();
 });
 
 function updateHourLabel() {
@@ -821,8 +262,7 @@ function updateHourLabel() {
     return;
   }
 
-  const refLocation = selectedLocation || locations[0];
-  const f = refLocation?.forecast?.[selectedHour];
-
+  const f = locations[0]?.forecast?.[selectedHour];
   hourLabel.innerText = f?.time ? formatTimeLabel(f.time) : "--";
 }
+
