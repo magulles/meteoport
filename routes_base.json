@@ -1,29 +1,50 @@
 [
   {
-    "id": "ruta_4",
-    "name": "Val-Bcn",
-    "departure_time": "2026-03-27T08:00:00Z",
-    "arrival_time": "2026-03-27T13:00:00Z",
+    "id": "ruta_1",
+    "name": "Val-Pal",
+    "departure_time": "2026-03-27T21:45:00Z",
+    "arrival_time": "2026-03-28T05:00:00Z",
     "points": [
-      "Val_puerto",
-      "Valencia",
-      "Valbar1",
-      "Valbar2",
-      "Valbar3",
-      "Barcelona",
-      "Bar_puerto"
+      "valpal1_puerto",
+      "valpal2_puerto",
+      "valpal3_puerto",
+      "valpal4",
+      "valpal5",
+      "valpal6",
+      "valpal7"
     ]
   },
   {
-    "id": "ruta_6",
+    "id": "ruta_2",
     "name": "Mal-Mel",
-    "departure_time": "2026-03-27T15:00:00Z",
-    "arrival_time": "2026-03-27T22:30:00Z",
+    "departure_time": "2026-03-27T17:00:00Z",
+    "arrival_time": "2026-03-27T23:00:00Z",
     "points": [
-      "Malaga",
-      "Malmel2",
-      "Malmel4",
-      "Melilla"
+      "malmel1_puerto",
+      "malmel2_puerto",
+      "malmel3",
+      "malmel4",
+      "malmel5",
+      "malmel6",
+      "malmel7"
+    ]
+  },
+  {
+    "id": "ruta_3",
+    "name": "Huel-Ten",
+    "departure_time": "2026-03-27T16:00:00Z",
+    "arrival_time": "2026-03-29T03:00:00Z",
+    "points": [
+      "huelten1",
+      "huelten2",
+      "huelten3",
+      "huelten4",
+      "huelten5",
+      "huelten6",
+      "huelten7",
+      "huelten8",
+      "huelten9_puerto",
+      "huelten10_puerto"
     ]
   }
 ]

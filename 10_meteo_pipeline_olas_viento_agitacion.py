@@ -918,10 +918,14 @@ PORT_MESHES = {
         "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a02/HOURLY/catalog.xml",
         "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/wave_local_a02/HOURLY/",
     },
-    # "bilbao": {
-    #     "catalog_xml": "https://opendap.puertos.es/thredds/catalog/...../HOURLY/catalog.xml",
-    #     "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/...../HOURLY/",
-    # },
+     "malaga": {
+         "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a17/HOURLY/catalog.xml",
+        "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/wave_local_a17/HOURLY/",
+     },
+     "tenerife": {
+         "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a08a/HOURLY/catalog.xml",
+        "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/wave_local_a08a/HOURLY/",
+     }
 }
 
 PORT_MESH_PRIORITY = list(PORT_MESHES.keys())
