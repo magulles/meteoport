@@ -643,7 +643,7 @@ function renderChart() {
           selectedIndex: selectedHour
         },
         pdeWaveArrowsPlugin: {
-          datasetIndex: 0,
+          datasetIndex: 1,
           directions: dirPde
         }
       },
