@@ -95,6 +95,7 @@ function escapeHtml(text) {
 
 function getOperationalWave(f) {
   const hasPde = f && f.hs_pde !== null && f.hs_pde !== undefined && !Number.isNaN(f.hs_pde);
+  const hasPort = f && f.hs_port !== null && f.hs_port !== undefined && !Number.isNaN(f.hs_port);
 
   if (hasPde) {
     return {
@@ -105,6 +106,15 @@ function getOperationalWave(f) {
     };
   }
 
+  if (hasPort) {
+    return {
+      wave: f.hs_port,
+      tp: null,
+      dir: null,
+      source: "Puerto"
+    };
+  }
+
   return {
     wave: f?.hs ?? null,
     tp: f?.tp ?? null,
@@ -112,6 +122,8 @@ function getOperationalWave(f) {
     source: "Copernicus"
   };
 }
+
+
 
 function buildMergedForecast(point) {
   return (point.forecast || []).map((f, i) => {
@@ -125,6 +137,7 @@ function buildMergedForecast(point) {
       dir: op.dir,
       waveSource: op.source,
       wavePde: f.hs_pde ?? null,
+      wavePort: f.hs_port ?? null,
       waveCopernicus: f.hs ?? null,
       tpPde: f.tp_pde ?? null,
       tpCopernicus: f.tp ?? null,
@@ -545,6 +558,7 @@ function renderChart() {
 
   const forecast = selectedLocation.forecast;
   const labels = forecast.map(f => formatTimeLabel(f.time));
+  const hsPort = forecast.map(f => f.wavePort);
   const hsPde = forecast.map(f => f.wavePde);
   const hsCop = forecast.map(f => f.waveCopernicus);
   const dirPde = forecast.map(f => f.dirPde);
@@ -558,6 +572,17 @@ function renderChart() {
     data: {
       labels,
       datasets: [
+        {
+          label: "Puerto",
+          data: hsPort,
+          borderColor: "#16a34a",
+          backgroundColor: "transparent",
+          borderWidth: 2.2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          tension: 0.25,
+          spanGaps: true
+        },
         {
           label: "PdE",
           data: hsPde,
@@ -605,6 +630,7 @@ function renderChart() {
               const idx = items[0].dataIndex;
               const f = forecast[idx];
               return [
+                `Hs Puerto: ${formatNumber(f.wavePort)} m`,
                 `Hs PdE: ${formatNumber(f.wavePde)} m`,
                 `Tp PdE: ${formatNumber(f.tpPde)} s`,
                 `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
