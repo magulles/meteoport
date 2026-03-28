@@ -3,7 +3,7 @@
     "name": "Val-Bcn",
     "departure_time": "2026-03-27T08:00:00Z",
     "arrival_time": "2026-03-27T13:00:00Z",
-    "points": ["Valencia", "Valbar1","Valbar2","Valbar3","Barcelona"]
+    "points": ["Val_puerto","Valencia", "Valbar1","Valbar2","Valbar3","Barcelona","Bar_puerto"]
   },
   {
     "id": "ruta_6",
