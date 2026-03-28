@@ -28,6 +28,8 @@ const waveChartCanvas = document.getElementById("wave-chart");
 // ============================
 
 const map = L.map("map").setView([39.5, 0], 5);
+map.createPane("routesPane");
+map.getPane("routesPane").style.zIndex = 350;
 
 L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   attribution: "&copy; OpenStreetMap &copy; CARTO",
@@ -266,7 +268,7 @@ function initRoutes() {
       weight: 3,
       opacity: 0.75
     }).addTo(map);
-
+    polyline.bringToBack();
     polyline.bindTooltip(route.name, { direction: "top", sticky: true });
 
     polyline.on("click", () => {
