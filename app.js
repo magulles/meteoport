@@ -692,13 +692,14 @@ options: {
       grid: { color: "#eef2f7" }
     },
     y: {
-      beginAtZero: true,
-      title: {
-        display: true,
-        text: "Hs (m)"
-      },
-      grid: { color: "#e5e7eb" }
-    }
+  beginAtZero: true,
+  title: {
+    display: true,
+    text: "Hs (m)"
+  },
+  grid: { color: "#e5e7eb" },
+  grace: '10%'   // 👈 añade esto
+}
   }
 },
     plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin]
