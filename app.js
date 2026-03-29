@@ -617,8 +617,8 @@ const daySeparatorPlugin = {
     if (!xScale || !labels.length) return;
 
     ctx.save();
-    ctx.strokeStyle = 'rgba(80, 80, 80, 0.25)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(70, 70, 70, 0.25)';
+    ctx.lineWidth = 1.2;
     ctx.setLineDash([4, 4]);
 
     for (let i = 1; i < labels.length; i++) {
