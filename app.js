@@ -655,40 +655,8 @@ options: {
     mode: "index",
     intersect: false
   },
-  layout: {
-    padding: {
-      top: 4,
-      right: 6,
-      bottom: 0,
-      left: 0
-    }
-  },
   plugins: {
-    legend: {
-      position: window.innerWidth <= 900 ? "top" : "top",
-      labels: {
-        boxWidth: window.innerWidth <= 900 ? 18 : 40,
-        boxHeight: window.innerWidth <= 900 ? 10 : 12,
-        padding: window.innerWidth <= 900 ? 12 : 16,
-        font: {
-          size: window.innerWidth <= 900 ? 11 : 13
-        }
-      }
-    },
     tooltip: {
-      displayColors: false,
-      padding: window.innerWidth <= 900 ? 8 : 10,
-      bodySpacing: window.innerWidth <= 900 ? 3 : 4,
-      titleMarginBottom: window.innerWidth <= 900 ? 4 : 6,
-      caretPadding: 6,
-      cornerRadius: 8,
-      titleFont: {
-        size: window.innerWidth <= 900 ? 11 : 13,
-        weight: "700"
-      },
-      bodyFont: {
-        size: window.innerWidth <= 900 ? 11 : 12
-      },
       callbacks: {
         title: items => {
           if (!items.length) return "";
@@ -716,44 +684,18 @@ options: {
     },
     pdeWaveArrowsPlugin: {
       datasetIndex: 1,
-      directions: dirPde,
-      yOffsetPx: window.innerWidth <= 900 ? 12 : 16,
-      arrowLengthPx: window.innerWidth <= 900 ? 10 : 14,
-      arrowHeadPx: window.innerWidth <= 900 ? 4 : 5,
-      lineWidth: window.innerWidth <= 900 ? 1.1 : 1.4
+      directions: dirPde
     }
   },
   scales: {
     x: {
-      grid: { color: "#eef2f7" },
-      ticks: {
-        autoSkip: false,
-        maxRotation: window.innerWidth <= 900 ? 50 : 60,
-        minRotation: window.innerWidth <= 900 ? 50 : 60,
-        font: {
-          size: window.innerWidth <= 900 ? 10 : 12
-        },
-        callback: function(value, index) {
-          if (window.innerWidth <= 900) {
-            return index % 6 === 0 ? this.getLabelForValue(value) : "";
-          }
-          return this.getLabelForValue(value);
-        }
-      }
+      grid: { color: "#eef2f7" }
     },
     y: {
       beginAtZero: true,
       title: {
         display: true,
-        text: "Hs (m)",
-        font: {
-          size: window.innerWidth <= 900 ? 11 : 12
-        }
-      },
-      ticks: {
-        font: {
-          size: window.innerWidth <= 900 ? 10 : 12
-        }
+        text: "Hs (m)"
       },
       grid: { color: "#e5e7eb" }
     }
