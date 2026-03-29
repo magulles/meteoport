@@ -1,4 +1,42 @@
 // ============================
+// RESIZE HANDLER (MAP + CHART)
+// ============================
+
+window.addEventListener("load", () => {
+  setupResponsiveFixes();
+});
+
+function setupResponsiveFixes() {
+  let resizeTimeout;
+
+  function handleResize() {
+    clearTimeout(resizeTimeout);
+
+    resizeTimeout = setTimeout(() => {
+      if (window.map) {
+        window.map.invalidateSize();
+      }
+
+      if (window.chart) {
+        window.chart.resize();
+      }
+    }, 200);
+  }
+
+  window.addEventListener("resize", handleResize);
+
+  window.addEventListener("orientationchange", () => {
+    setTimeout(() => {
+      handleResize();
+    }, 300);
+  });
+}
+
+// TOUCH FIX
+document.addEventListener("touchstart", function () {}, { passive: true });
+
+
+// ============================
 // CONFIG
 // ============================
 
