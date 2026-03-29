@@ -31,6 +31,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .logo {
@@ -100,6 +101,7 @@ body {
 .map-section {
   position: relative;
   background: #eef2f7;
+  min-width: 0;
 }
 
 #map {
@@ -139,7 +141,7 @@ body {
 @media (max-width: 900px) {
   .app-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto;
     min-height: auto;
   }
 
@@ -158,6 +160,145 @@ body {
   }
 }
 
+@media (max-width: 768px) {
+  html, body {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .topbar {
+    height: auto;
+    min-height: 72px;
+    padding: 12px 14px;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .logo {
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .tagline {
+    font-size: 0.82rem;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  .topnav {
+    width: 100%;
+  }
+
+  .topnav a {
+    display: inline-block;
+    font-size: 0.95rem;
+  }
+
+  .sidebar {
+    padding: 14px;
+  }
+
+  .sidebar h2 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+
+  .time-control {
+    margin-bottom: 14px;
+  }
+
+  .time-control label {
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }
+
+  .info-panel {
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .info-panel p {
+    margin: 0 0 8px 0;
+  }
+
+  .info-panel hr {
+    margin: 8px 0 !important;
+  }
+
+  .map-section {
+    min-height: 50vh;
+  }
+
+  #map {
+    min-height: 50vh;
+    height: 50vh;
+  }
+
+  .bottom-chart {
+    height: 320px;
+    padding: 8px;
+  }
+
+  .chart-card {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .chart-card h3 {
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+  }
+
+  #wave-chart {
+    height: calc(100% - 24px) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 10px 12px;
+  }
+
+  .tagline {
+    font-size: 0.78rem;
+  }
+
+  .sidebar {
+    padding: 12px;
+  }
+
+  .map-section {
+    min-height: 46vh;
+  }
+
+  #map {
+    min-height: 46vh;
+    height: 46vh;
+  }
+
+  .bottom-chart {
+    height: 280px;
+    padding: 6px;
+  }
+
+  .chart-card {
+    padding: 10px;
+  }
+
+  .info-panel {
+    font-size: 0.92rem;
+  }
+}
+
 .leaflet-interactive:focus {
   outline: none !important;
 }
@@ -171,3 +312,4 @@ path.leaflet-interactive:focus {
 .leaflet-container path:focus {
   outline: none !important;
 }
+
