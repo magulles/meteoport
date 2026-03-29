@@ -698,7 +698,7 @@ options: {
     text: "Hs (m)"
   },
   grid: { color: "#e5e7eb" },
-  grace: '10%'   // 👈 añade esto
+  grace: '15%'   // 👈 añade esto
 }
   }
 },
