@@ -313,3 +313,44 @@ path.leaflet-interactive:focus {
   outline: none !important;
 }
 
+@media (max-width: 900px) {
+  .bottom-chart {
+    height: 500px;
+    padding: 8px;
+  }
+
+  .chart-card {
+    padding: 10px 10px 8px 10px;
+    border-radius: 10px;
+  }
+
+  .chart-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 0.95rem;
+  }
+
+  #wave-chart {
+    height: calc(100% - 24px) !important;
+  }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  .bottom-chart {
+    height: 520px;
+  }
+
+  #map {
+    min-height: 42vh;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .bottom-chart {
+    height: 380px;
+  }
+
+  #map {
+    min-height: 32vh;
+  }
+}
+
