@@ -607,6 +607,41 @@ function renderChart() {
     waveChart.destroy();
   }
 
+const daySeparatorPlugin = {
+  id: 'daySeparatorPlugin',
+  afterDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+    const labels = chart.data.labels || [];
+
+    if (!xScale || !labels.length) return;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(80, 80, 80, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+
+    for (let i = 1; i < labels.length; i++) {
+      const prev = labels[i - 1];
+      const curr = labels[i];
+
+      const prevDay = prev.split('-')[1];
+      const currDay = curr.split('-')[1];
+
+      if (prevDay !== currDay) {
+        const x = xScale.getPixelForValue(i);
+
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+  }
+};
+  
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
@@ -702,7 +737,7 @@ options: {
 }
   }
 },
-    plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin]
+    plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin,daySeparatorPlugin]
   });
 }
 
