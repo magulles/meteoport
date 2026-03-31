@@ -34,7 +34,6 @@ jobs:
         run: |
           python 10_meteo_pipeline_olas_viento_agitacion_optimizado.py
           python descarga_obs.py
-          python merge_obs_into_meteo_points.py
           python aux_actualizar_fechas_rutas.py
           
           
