@@ -723,7 +723,8 @@ options: {
             `Hs PdE: ${formatNumber(f.wavePde)} m`,
             `Tp PdE: ${formatNumber(f.tpPde)} s`,
             `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
-            `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`
+            `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`,
+            `Hs Obs: ${formatNumber(f.waveObs)} m`
           ];
         }
       }
