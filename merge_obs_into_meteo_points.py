@@ -1,9 +1,8 @@
 import json
 
-# archivos
 METEO_FILE = "meteo_points.json"
 OBS_FILE = "boyas_obs_1day.json"
-OUTPUT_FILE = "meteo_points.json"  # sobrescribe
+OUTPUT_FILE = "meteo_points.json"
 
 
 # =========================
@@ -31,21 +30,27 @@ for buoy_name, records in obs["buoys"].items():
     lon = records[0].get("lon")
     lat = records[0].get("lat")
 
-    series = []
+    forecast = []
 
     for r in records:
-        series.append({
+        forecast.append({
             "time": r["time"],
             "hs": r.get("hsobs"),
-            "wspd": r.get("wspd"),
-            "source": "obs"
+            "tp": None,
+            "di": None,
+            "hs_pde": None,
+            "tp_pde": None,
+            "di_pde": None,
+            "hs_port": None,
+            "wind_speed_10m_ms": r.get("wspd"),
+            "wind_direction_10m_deg": None
         })
 
     point = {
         "name": f"{buoy_name}_obs",
         "lon": lon,
         "lat": lat,
-        "series": series
+        "forecast": forecast
     }
 
     new_points.append(point)
@@ -55,11 +60,10 @@ for buoy_name, records in obs["buoys"].items():
 # INSERTAR EN METEO
 # =========================
 
-# asumiendo estructura: { "points": [...] }
 if "points" in meteo:
     meteo["points"].extend(new_points)
 else:
-    print("⚠️ No encuentro 'points' en meteo_points.json")
+    print("⚠️ No encuentro 'points'")
 
 
 # =========================
