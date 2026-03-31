@@ -603,6 +603,7 @@ function renderChart() {
   const hsPort = forecast.map(f => f.wavePort);
   const hsPde = forecast.map(f => f.wavePde);
   const hsCop = forecast.map(f => f.waveCopernicus);
+  const hsObs = forecast.map(f => f.waveObs);
   const dirPde = forecast.map(f => f.dirPde);
 
   if (waveChart) {
