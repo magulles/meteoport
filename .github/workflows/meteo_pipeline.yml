@@ -33,6 +33,8 @@ jobs:
           COPERNICUS_PASSWORD: ${{ secrets.COPERNICUS_PASSWORD }}
         run: |
           python 11_meteo_pipeline_olas_viento_agitacion_optimizado.py
+          python descarga_obs.py
+          python merge_meteo_obs.py
           python aux_actualizar_fechas_rutas.py
           
           
