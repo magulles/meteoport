@@ -327,8 +327,8 @@ function initRoutes() {
 // ============================
 
 Promise.all([
-  fetch("./meteo_points.json").then(res => {
-    if (!res.ok) throw new Error(`HTTP ${res.status} cargando meteo_points.json`);
+  fetch("./meteo_points_tot.json").then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status} cargando meteo_points_tot.json`);
     return res.json();
   }),
   fetch("./routes.json").then(res => {
@@ -347,7 +347,7 @@ Promise.all([
     }));
 
     if (!locations.length) {
-      throw new Error("No hay puntos en meteo_points.json");
+      throw new Error("No hay puntos en meteo_points_tot.json");
     }
 
     routes = buildRoutes(routesData);
