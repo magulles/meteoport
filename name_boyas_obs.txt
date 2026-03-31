@@ -1,0 +1,3 @@
+Valencia|6100281
+Barcelona|Barcelona-coast-buoy
+Bilbao|Bilbao-coast-buoy
