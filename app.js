@@ -164,7 +164,6 @@ function getOperationalWave(f) {
 }
 
 
-
 function buildMergedForecast(point) {
   return (point.forecast || []).map((f, i) => {
     const op = getOperationalWave(f);
@@ -179,15 +178,18 @@ function buildMergedForecast(point) {
       wavePde: f.hs_pde ?? null,
       wavePort: f.hs_port ?? null,
       waveCopernicus: f.hs ?? null,
+      waveObs: f.hsobs ?? null,
       tpPde: f.tp_pde ?? null,
       tpCopernicus: f.tp ?? null,
       dirPde: f.di_pde ?? null,
       dirCopernicus: f.di ?? null,
       windSpeed: f.wind_speed_10m_ms ?? null,
-      windDir: f.wind_direction_10m_deg ?? null
+      windDir: f.wind_direction_10m_deg ?? null,
+      windObs: f.wspdobs ?? null
     };
   });
 }
+
 
 function getForecastLength() {
   if (!locations.length) return 0;
