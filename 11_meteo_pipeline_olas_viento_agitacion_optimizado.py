@@ -24,6 +24,15 @@ import re
 import tempfile
 import threading
 import time
+import gc
+
+# Evita sobre-paralelismo interno de librerías nativas (útil en GitHub Actions)
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
+os.environ.setdefault("HDF5_USE_FILE_LOCKING", "FALSE")
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -381,9 +390,8 @@ def fetch_copernicus_candidate(req_lon, req_lat, point_id, attempt_idx, start_da
         output_filename=outfile,
     )
 
-    ds = xr.open_dataset(outfile)
-
-    try:
+    with xr.open_dataset(outfile, cache=False) as ds:
+        ds.load()
         real_lon = safe_float(ds["longitude"].values)
         real_lat = safe_float(ds["latitude"].values)
 
@@ -412,26 +420,26 @@ def fetch_copernicus_candidate(req_lon, req_lat, point_id, attempt_idx, start_da
                 "di": di_v,
             })
 
-        total_count = len(forecast)
-        valid_ratio = valid_count / total_count if total_count else 0.0
-        distance_km = None
-        if None not in (req_lon, req_lat, real_lon, real_lat):
-            distance_km = round(haversine_km(req_lon, req_lat, real_lon, real_lat), 3)
+    total_count = len(forecast)
+    valid_ratio = valid_count / total_count if total_count else 0.0
+    distance_km = None
+    if None not in (req_lon, req_lat, real_lon, real_lat):
+        distance_km = round(haversine_km(req_lon, req_lat, real_lon, real_lat), 3)
 
-        return {
-            "requested_lon": req_lon,
-            "requested_lat": req_lat,
-            "lon": real_lon,
-            "lat": real_lat,
-            "forecast": forecast,
-            "valid_count": valid_count,
-            "total_count": total_count,
-            "valid_ratio": round(valid_ratio, 4),
-            "distance_to_selected_grid_km": distance_km,
-            "temp_nc_file": outfile,
-        }
-    finally:
-        ds.close()
+    gc.collect()
+
+    return {
+        "requested_lon": req_lon,
+        "requested_lat": req_lat,
+        "lon": real_lon,
+        "lat": real_lat,
+        "forecast": forecast,
+        "valid_count": valid_count,
+        "total_count": total_count,
+        "valid_ratio": round(valid_ratio, 4),
+        "distance_to_selected_grid_km": distance_km,
+        "temp_nc_file": outfile,
+    }
 
 
 
@@ -774,11 +782,17 @@ def open_local_nc_from_url(url: str, timeout=HTTP_TIMEOUT_FILE, max_retries=5, b
                             tmp.write(chunk)
 
             try:
-                ds = xr.open_dataset(tmp_name, engine="netcdf4")
+                with xr.open_dataset(tmp_name, engine="netcdf4", cache=False) as ds:
+                    ds.load()
+                    ds_mem = ds.copy(deep=True)
             except Exception:
-                ds = xr.open_dataset(tmp_name, engine="h5netcdf")
+                with xr.open_dataset(tmp_name, engine="h5netcdf", cache=False) as ds:
+                    ds.load()
+                    ds_mem = ds.copy(deep=True)
 
-            return ds, tmp_name
+            remove_file_safely(tmp_name)
+            gc.collect()
+            return ds_mem, None
 
         except (requests.Timeout, requests.ConnectionError, requests.HTTPError) as e:
             last_error = e
@@ -958,6 +972,7 @@ def _process_single_pde_hour(nc_name: str, url: str, points: List[Dict], nearest
             except Exception:
                 pass
         remove_file_safely(tmp_name)
+        gc.collect()
 
 
 def download_pde_wave_data_for_region(points: List[Dict], region_meta: Dict):
@@ -1010,18 +1025,12 @@ def download_pde_wave_data_for_region(points: List[Dict], region_meta: Dict):
     workers = max(1, min(MAX_WORKERS_PDE, len(region_meta["files"])))
     print(f"Workers PDE para {region_meta['key']}: {workers}")
 
-    futures = {}
-    with ThreadPoolExecutor(max_workers=workers) as executor:
+    if workers == 1:
         for k, nc_name in enumerate(region_meta["files"], start=1):
             url = region_meta["fileserver_base"] + nc_name
-            print(f"[{k}/{len(region_meta['files'])}] Cola descarga/proceso {nc_name}", flush=True)
-            fut = executor.submit(_process_single_pde_hour, nc_name, url, points, nearest_idxs, True)
-            futures[fut] = (k, nc_name, url)
-
-        for fut in as_completed(futures):
-            _, nc_name, url = futures[fut]
+            print(f"[{k}/{len(region_meta['files'])}] Descarga/proceso {nc_name}", flush=True)
             try:
-                result = fut.result()
+                result = _process_single_pde_hour(nc_name, url, points, nearest_idxs, True)
                 for pid, rec in result["records_by_pid"].items():
                     point_forecasts[pid]["forecast"].append(rec)
             except Exception as e:
@@ -1031,6 +1040,28 @@ def download_pde_wave_data_for_region(points: List[Dict], region_meta: Dict):
                     "url": url,
                     "error": str(e),
                 })
+    else:
+        futures = {}
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            for k, nc_name in enumerate(region_meta["files"], start=1):
+                url = region_meta["fileserver_base"] + nc_name
+                print(f"[{k}/{len(region_meta['files'])}] Cola descarga/proceso {nc_name}", flush=True)
+                fut = executor.submit(_process_single_pde_hour, nc_name, url, points, nearest_idxs, True)
+                futures[fut] = (k, nc_name, url)
+
+            for fut in as_completed(futures):
+                _, nc_name, url = futures[fut]
+                try:
+                    result = fut.result()
+                    for pid, rec in result["records_by_pid"].items():
+                        point_forecasts[pid]["forecast"].append(rec)
+                except Exception as e:
+                    print(f"    ERROR en {nc_name}: {e}", flush=True)
+                    failed_hours.append({
+                        "file": nc_name,
+                        "url": url,
+                        "error": str(e),
+                    })
 
     out = []
     for point in points:
@@ -1325,6 +1356,7 @@ def _process_single_port_hour(nc_name: str, url: str, points: List[Dict], neares
             except Exception:
                 pass
         remove_file_safely(tmp_name)
+        gc.collect()
 
 
 def download_port_agitation_for_mesh(points: List[Dict], mesh_meta: Dict):
@@ -1376,18 +1408,12 @@ def download_port_agitation_for_mesh(points: List[Dict], mesh_meta: Dict):
     workers = max(1, min(MAX_WORKERS_PORT, len(mesh_meta["files"])))
     print(f"Workers agitación para {mesh_meta['key']}: {workers}")
 
-    futures = {}
-    with ThreadPoolExecutor(max_workers=workers) as executor:
+    if workers == 1:
         for k, nc_name in enumerate(mesh_meta["files"], start=1):
             url = mesh_meta["fileserver_base"] + nc_name
-            print(f"[{k}/{len(mesh_meta['files'])}] Cola descarga/proceso {nc_name}", flush=True)
-            fut = executor.submit(_process_single_port_hour, nc_name, url, points, nearest_idxs)
-            futures[fut] = (k, nc_name, url)
-
-        for fut in as_completed(futures):
-            _, nc_name, url = futures[fut]
+            print(f"[{k}/{len(mesh_meta['files'])}] Descarga/proceso {nc_name}", flush=True)
             try:
-                result = fut.result()
+                result = _process_single_port_hour(nc_name, url, points, nearest_idxs)
                 for pid, rec in result["records_by_pid"].items():
                     point_forecasts[pid]["forecast"].append(rec)
             except Exception as e:
@@ -1397,6 +1423,28 @@ def download_port_agitation_for_mesh(points: List[Dict], mesh_meta: Dict):
                     "url": url,
                     "error": str(e),
                 })
+    else:
+        futures = {}
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            for k, nc_name in enumerate(mesh_meta["files"], start=1):
+                url = mesh_meta["fileserver_base"] + nc_name
+                print(f"[{k}/{len(mesh_meta['files'])}] Cola descarga/proceso {nc_name}", flush=True)
+                fut = executor.submit(_process_single_port_hour, nc_name, url, points, nearest_idxs)
+                futures[fut] = (k, nc_name, url)
+
+            for fut in as_completed(futures):
+                _, nc_name, url = futures[fut]
+                try:
+                    result = fut.result()
+                    for pid, rec in result["records_by_pid"].items():
+                        point_forecasts[pid]["forecast"].append(rec)
+                except Exception as e:
+                    print(f"    ERROR en {nc_name}: {e}", flush=True)
+                    failed_hours.append({
+                        "file": nc_name,
+                        "url": url,
+                        "error": str(e),
+                    })
 
     out = []
     for point in points:
@@ -1699,26 +1747,14 @@ def main():
     wind_points = []
     agitation_points = []
 
-    jobs = {}
-    with ThreadPoolExecutor(max_workers=max(1, MAX_WORKERS_TOP_LEVEL)) as executor:
-        if offshore_points:
-            jobs[executor.submit(download_copernicus_wave_data, offshore_points)] = "copernicus"
-            jobs[executor.submit(download_pde_wave_data, offshore_points)] = "pde"
-            jobs[executor.submit(download_wind_data, offshore_points)] = "wind"
+    # Más estable en entornos CI: ejecutar secuencialmente las partes que usan netCDF/xarray.
+    if offshore_points:
+        copernicus_points = download_copernicus_wave_data(offshore_points)
+        pde_points = download_pde_wave_data(offshore_points)
+        wind_points = download_wind_data(offshore_points)
 
-        if port_points:
-            jobs[executor.submit(download_port_agitation, port_points)] = "agitation"
-
-        for fut in as_completed(jobs):
-            key = jobs[fut]
-            if key == "copernicus":
-                copernicus_points = fut.result()
-            elif key == "pde":
-                pde_points = fut.result()
-            elif key == "wind":
-                wind_points = fut.result()
-            elif key == "agitation":
-                agitation_points = fut.result()
+    if port_points:
+        agitation_points = download_port_agitation(port_points)
 
     merge_all_sources(
         copernicus_points,
