@@ -607,6 +607,7 @@ function renderChart() {
   const hsCop = forecast.map(f => f.waveCopernicus);
   const hsObs = forecast.map(f => f.waveObs);
   const dirPde = forecast.map(f => f.dirPde);
+  const dirCop = forecast.map(f => f.dirCopernicus);
 
   if (waveChart) {
     waveChart.destroy();
@@ -738,7 +739,7 @@ options: {
     },
     pdeWaveArrowsPlugin: {
       datasetIndex: 2,
-      directions: di
+      directions: dirCop
     }
   },
   scales: {
