@@ -521,13 +521,13 @@ const verticalCursorPlugin = {
 // CHART PLUGIN: PDE WAVE ARROWS 
 // ============================
 
-
 const pdeWaveArrowsPlugin = {
   id: "pdeWaveArrowsPlugin",
   afterDatasetsDraw(chart, args, options) {
     const datasetIndex = options?.datasetIndex ?? 1;
     const directions = options?.directions ?? [];
-    const topPaddingPx = options?.topPaddingPx ?? 18;   // distancia desde arriba
+    const topPaddingPx = options?.topPaddingPx ?? 18;
+    const arrowYValue = options?.arrowYValue ?? null;
     const arrowLengthPx = options?.arrowLengthPx ?? 14;
     const arrowHeadPx = options?.arrowHeadPx ?? 5;
     const lineWidth = options?.lineWidth ?? 1.4;
@@ -537,18 +537,20 @@ const pdeWaveArrowsPlugin = {
     const dataset = chart.data.datasets?.[datasetIndex];
     const ctx = chart.ctx;
     const chartArea = chart.chartArea;
+    const yScale = chart.scales.y;
 
     if (!meta || !dataset || meta.hidden) return;
     if (!meta.data || !meta.data.length) return;
-    if (!chartArea) return;
+    if (!chartArea || !yScale) return;
 
     ctx.save();
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
     ctx.lineWidth = lineWidth;
 
-    // 🔥 altura fija para todas las flechas
-    const yFixed = chartArea.top + topPaddingPx;
+    const yFixed = arrowYValue !== null
+      ? yScale.getPixelForValue(arrowYValue)
+      : chartArea.top + topPaddingPx;
 
     meta.data.forEach((pointEl, i) => {
       const hsValue = dataset.data[i];
@@ -581,21 +583,16 @@ const pdeWaveArrowsPlugin = {
 
       ctx.beginPath();
       ctx.moveTo(x2, y2);
-      ctx.lineTo(
-        x2 + arrowHeadPx * Math.cos(a1),
-        y2 + arrowHeadPx * Math.sin(a1)
-      );
+      ctx.lineTo(x2 + arrowHeadPx * Math.cos(a1), y2 + arrowHeadPx * Math.sin(a1));
       ctx.moveTo(x2, y2);
-      ctx.lineTo(
-        x2 + arrowHeadPx * Math.cos(a2),
-        y2 + arrowHeadPx * Math.sin(a2)
-      );
+      ctx.lineTo(x2 + arrowHeadPx * Math.cos(a2), y2 + arrowHeadPx * Math.sin(a2));
       ctx.stroke();
     });
 
     ctx.restore();
   }
 };
+
 // ============================
 // GRÁFICA
 // ============================
@@ -649,7 +646,45 @@ const daySeparatorPlugin = {
     ctx.restore();
   }
 };
-  
+
+  const allHs = [
+  ...hsPort,
+  ...hsPde,
+  ...hsCop,
+  ...hsObs
+].filter(v => v != null && !Number.isNaN(v));
+
+const maxHs = Math.max(...allHs);
+const arrowYValue = maxHs + 0.25;
+const yMaxChart = maxHs + 0.55;
+  options: {
+  layout: {
+    padding: {
+      top: 10
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: yMaxChart,
+      title: {
+        display: true,
+        text: "Hs (m)"
+      }
+    }
+  },
+  plugins: {
+    pdeWaveArrowsPlugin: {
+      datasetIndex: 1,
+      directions: di,
+      arrowYValue: arrowYValue,
+      arrowLengthPx: 12,
+      arrowHeadPx: 4,
+      lineWidth: 1.1,
+      color: "#6b7280"
+    }
+  }
+}
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
