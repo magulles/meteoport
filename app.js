@@ -740,7 +740,7 @@ const yMaxChart = maxHs + 0.7;     // techo del gráfico
   tension: 0.2,
   borderDash: [],              
   spanGaps: true,
-  order:10
+  order:-10
 }
       ]
     },
