@@ -383,8 +383,8 @@ function createObsIcon() {
         <div class="obs-stick"></div>
       </div>
     `,
-    iconSize: [18, 24],
-    iconAnchor: [9, 20],
+    iconSize: [14, 18],
+    iconAnchor: [7, 15],
     popupAnchor: [0, -18]
   });
 }
