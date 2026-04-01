@@ -361,8 +361,8 @@ path.leaflet-interactive:focus {
 }
 
 .obs-dot {
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
   background: #4b5563;
   border: 2px solid #1f2937;
   border-radius: 50%;
@@ -370,8 +370,8 @@ path.leaflet-interactive:focus {
 }
 
 .obs-stick {
-  width: 2px;
-  height: 10px;
+  width: 1.5px;
+  height: 7px;
   background: #1f2937;
   margin-top: -1px;
 }
