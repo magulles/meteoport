@@ -19,7 +19,7 @@ import xarray as xr
 DATASET_ID = "cmems_obs-ins_ibi_phybgcwav_mynrt_na_irr"
 DATASET_PART = "latest"
 
-BUOYS_FILE = "name_boyas.txt"
+BUOYS_FILE = "id_boyas.txt"
 DOWNLOAD_DIR = Path("copernicus_boyas_tmp")
 OUTPUT_JSON = "boyas_obs_1day.json"
 
