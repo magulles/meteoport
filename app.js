@@ -678,7 +678,7 @@ const yMaxChart = maxHs + 0.7;     // techo del gráfico
         {
           label: "PdE",
           data: hsPde,
-          borderColor: "#ef4444",
+          borderColor: "#dc2626",
           backgroundColor: "transparent",
           borderWidth: 2.2,
           pointRadius: 0,
