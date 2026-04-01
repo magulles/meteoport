@@ -517,16 +517,17 @@ const verticalCursorPlugin = {
   }
 };
 
+// ============================ 
+// CHART PLUGIN: PDE WAVE ARROWS 
 // ============================
-// CHART PLUGIN: PDE WAVE ARROWS
-// ============================
+
 
 const pdeWaveArrowsPlugin = {
   id: "pdeWaveArrowsPlugin",
   afterDatasetsDraw(chart, args, options) {
     const datasetIndex = options?.datasetIndex ?? 1;
     const directions = options?.directions ?? [];
-    const yOffsetPx = options?.yOffsetPx ?? 16;
+    const topPaddingPx = options?.topPaddingPx ?? 18;   // distancia desde arriba
     const arrowLengthPx = options?.arrowLengthPx ?? 14;
     const arrowHeadPx = options?.arrowHeadPx ?? 5;
     const lineWidth = options?.lineWidth ?? 1.4;
@@ -535,14 +536,19 @@ const pdeWaveArrowsPlugin = {
     const meta = chart.getDatasetMeta(datasetIndex);
     const dataset = chart.data.datasets?.[datasetIndex];
     const ctx = chart.ctx;
+    const chartArea = chart.chartArea;
 
     if (!meta || !dataset || meta.hidden) return;
     if (!meta.data || !meta.data.length) return;
+    if (!chartArea) return;
 
     ctx.save();
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
     ctx.lineWidth = lineWidth;
+
+    // 🔥 altura fija para todas las flechas
+    const yFixed = chartArea.top + topPaddingPx;
 
     meta.data.forEach((pointEl, i) => {
       const hsValue = dataset.data[i];
@@ -552,7 +558,7 @@ const pdeWaveArrowsPlugin = {
       if (dirFrom === null || dirFrom === undefined || Number.isNaN(dirFrom)) return;
 
       const x = pointEl.x;
-      const y = pointEl.y - yOffsetPx;
+      const y = yFixed;
 
       const arrowBearing = (dirFrom + 180) % 360;
       const rad = arrowBearing * Math.PI / 180;
@@ -590,7 +596,6 @@ const pdeWaveArrowsPlugin = {
     ctx.restore();
   }
 };
-
 // ============================
 // GRÁFICA
 // ============================
