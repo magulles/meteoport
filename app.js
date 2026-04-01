@@ -749,7 +749,8 @@ options: {
     },
     pdeWaveArrowsPlugin: {
       datasetIndex: 2,
-      directions: dirCop
+      directions: dirCop,
+      arrowYValue: arrowYValue
     }
   },
   scales: {
@@ -764,7 +765,6 @@ options: {
     text: "Hs (m)"
   },
   grid: { color: "#e5e7eb" },
-  grace: '15%'   // 👈 añade esto
 }
   }
 },
