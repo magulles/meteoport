@@ -525,7 +525,7 @@ const verticalCursorPlugin = {
 const pdeWaveArrowsPlugin = {
   id: "pdeWaveArrowsPlugin",
   afterDatasetsDraw(chart, args, options) {
-    const datasetIndex = options?.datasetIndex ?? 3;
+    const datasetIndex = options?.datasetIndex ?? 1;
     const directions = options?.directions ?? [];
     const topPaddingPx = options?.topPaddingPx ?? 18;   // distancia desde arriba
     const arrowLengthPx = options?.arrowLengthPx ?? 14;
