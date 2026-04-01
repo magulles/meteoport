@@ -647,44 +647,7 @@ const daySeparatorPlugin = {
   }
 };
 
-  const allHs = [
-  ...hsPort,
-  ...hsPde,
-  ...hsCop,
-  ...hsObs
-].filter(v => v != null && !Number.isNaN(v));
-
-const maxHs = Math.max(...allHs);
-const arrowYValue = maxHs + 0.25;
-const yMaxChart = maxHs + 0.55;
-  options: {
-  layout: {
-    padding: {
-      top: 10
-    }
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      max: yMaxChart,
-      title: {
-        display: true,
-        text: "Hs (m)"
-      }
-    }
-  },
-  plugins: {
-    pdeWaveArrowsPlugin: {
-      datasetIndex: 1,
-      directions: di,
-      arrowYValue: arrowYValue,
-      arrowLengthPx: 12,
-      arrowHeadPx: 4,
-      lineWidth: 1.1,
-      color: "#6b7280"
-    }
-  }
-}
+ 
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
