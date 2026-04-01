@@ -739,7 +739,8 @@ const yMaxChart = maxHs + 0.7;     // techo del gráfico
   pointHoverRadius: 3,
   tension: 0.2,
   borderDash: [],              
-  spanGaps: true
+  spanGaps: true,
+  order:10
 }
       ]
     },
