@@ -1,3 +1,4 @@
-valpalcomp1|6100281
-barcecomp1|Barcelona-coast-buoy
+boya1|Barcelona-coast-buoy
+boya2|6100281
+
 
