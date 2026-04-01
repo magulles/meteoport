@@ -374,6 +374,25 @@ Promise.all([
 // MARKERS
 // ============================
 
+function createObsIcon() {
+  return L.divIcon({
+    className: "obs-marker-icon",
+    html: `
+      <div class="obs-marker">
+        <div class="obs-dot"></div>
+        <div class="obs-stick"></div>
+      </div>
+    `,
+    iconSize: [18, 24],
+    iconAnchor: [9, 20],
+    popupAnchor: [0, -18]
+  });
+}
+
+// ============================
+// MARKERS
+// ============================
+
 function initMarkers() {
   markers.forEach(({ marker }) => map.removeLayer(marker));
   markers = [];
@@ -381,14 +400,23 @@ function initMarkers() {
   locations.forEach(loc => {
     const f = loc.forecast[selectedHour];
     const color = f ? getColor(f.wave) : "#9ca3af";
+    const isObsPoint = loc.name?.toLowerCase().startsWith("boya");
 
-    const marker = L.circleMarker(loc.coords, {
-      radius: 4,
-      color,
-      fillColor: color,
-      fillOpacity: 0.85,
-      weight: 2
-    }).addTo(map);
+    let marker;
+
+    if (isObsPoint) {
+      marker = L.marker(loc.coords, {
+        icon: createObsIcon()
+      }).addTo(map);
+    } else {
+      marker = L.circleMarker(loc.coords, {
+        radius: 4,
+        color,
+        fillColor: color,
+        fillOpacity: 0.85,
+        weight: 2
+      }).addTo(map);
+    }
 
     marker.bindTooltip(loc.name, { direction: "top", offset: [0, -6] });
 
@@ -400,18 +428,21 @@ function initMarkers() {
       renderChart();
     });
 
-    markers.push({ marker, loc });
+    markers.push({ marker, loc, isObsPoint });
   });
 }
 
 function updateMarkers() {
-  markers.forEach(({ marker, loc }) => {
+  markers.forEach(({ marker, loc, isObsPoint }) => {
     const f = loc.forecast[selectedHour];
     const color = f ? getColor(f.wave) : "#9ca3af";
 
-    marker.setStyle({ color, fillColor: color });
+    if (!isObsPoint && marker.setStyle) {
+      marker.setStyle({ color, fillColor: color });
+    }
   });
 }
+
 
 // ============================
 // PANEL
