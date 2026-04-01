@@ -684,15 +684,16 @@ const daySeparatorPlugin = {
           tension: 0.25,
           spanGaps: true
         },
-        {
+{
   label: "Obs",
   data: hsObs,
-  borderColor: "#111111",
-  backgroundColor: "transparent",
-  borderWidth: 2.2,
-  pointRadius: 2,
-  pointHoverRadius: 4,
-  tension: 0.15,
+  borderColor: "rgba(0,0,0,0.5)",   
+  backgroundColor: "rgba(0,0,0,0.3)",
+  borderWidth: 1.5,                 
+  pointRadius: 2,                   
+  pointHoverRadius: 3,
+  tension: 0.2,
+  borderDash: [4, 4],              
   spanGaps: true
 }
       ]
