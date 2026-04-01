@@ -16,4 +16,4 @@ boya15|Tarifa-coast-buoy
 boya16|Tenerife-coast-buoy
 boya17|LasPalmas-coast-buoy
 boya18|Tarragona-coast-buoy
-
+boya19|6100196
