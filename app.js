@@ -648,7 +648,17 @@ const daySeparatorPlugin = {
   }
 };
 
- 
+const allHs = [
+  ...hsPort,
+  ...hsPde,
+  ...hsCop,
+  ...hsObs
+].filter(v => v != null && !Number.isNaN(v));
+
+const maxHs = Math.max(...allHs);
+const arrowYValue = maxHs + 0.3;   // donde van las flechas
+const yMaxChart = maxHs + 0.7;     // techo del gráfico  
+
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
@@ -747,7 +757,8 @@ options: {
       grid: { color: "#eef2f7" }
     },
     y: {
-  beginAtZero: true,
+   beginAtZero: true,
+  max: yMaxChart,
   title: {
     display: true,
     text: "Hs (m)"
