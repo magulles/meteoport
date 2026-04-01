@@ -701,7 +701,7 @@ const yMaxChart = maxHs + 0.7;     // techo del gráfico
 {
   label: "Obs",
   data: hsObs,
-  borderColor: "rgba(0,0,0,0.35)",   
+  borderColor: "rgba(0,0,0,0.6)",   
   backgroundColor: "rgba(0,0,0,0.3)",
   borderWidth: 1.2,                 
   pointRadius: 1.5,                   
