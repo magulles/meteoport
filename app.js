@@ -737,8 +737,8 @@ options: {
       selectedIndex: selectedHour
     },
     pdeWaveArrowsPlugin: {
-      datasetIndex: 1,
-      directions: dirPde
+      datasetIndex: 2,
+      directions: dir
     }
   },
   scales: {
