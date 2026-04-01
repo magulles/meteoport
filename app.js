@@ -738,7 +738,7 @@ options: {
     },
     pdeWaveArrowsPlugin: {
       datasetIndex: 2,
-      directions: dir
+      directions: di
     }
   },
   scales: {
