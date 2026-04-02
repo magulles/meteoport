@@ -1148,9 +1148,8 @@ def download_pde_wave_data(points):
 
 
 # =========================
-# 4) AGITACION 
+# 4) AGITACION
 # =========================
-
 
 PORT_MESHES = {
     "valencia": {
@@ -1161,22 +1160,22 @@ PORT_MESHES = {
         "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a02/HOURLY/catalog.xml",
         "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/wave_local_a02/HOURLY/",
     },
-     "malaga": {
-         "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a17/HOURLY/catalog.xml",
+    "malaga": {
+        "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a17/HOURLY/catalog.xml",
         "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/wave_local_a17/HOURLY/",
-     },
-     "tenerife": {
-         "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a08a/HOURLY/catalog.xml",
+    },
+    "tenerife": {
+        "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a08a/HOURLY/catalog.xml",
         "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/wave_local_a08a/HOURLY/",
-     },
-     "laspalmas": {
-         "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a15b/HOURLY/catalog.xml",
+    },
+    "laspalmas": {
+        "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_a15b/HOURLY/catalog.xml",
         "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/wave_local_a15b/HOURLY/",
-     },
-     "algeciras": {
-         "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_sfp_a11/HOURLY/catalog.xml",
+    },
+    "algeciras": {
+        "catalog_xml": "https://opendap.puertos.es/thredds/catalog/wave_local_sfp_a11/HOURLY/catalog.xml",
         "fileserver_base": "https://opendap.puertos.es/thredds/fileServer/wave_local_sfp_a11/HOURLY/",
-     }
+    }
 }
 
 PORT_MESH_PRIORITY = list(PORT_MESHES.keys())
@@ -1252,8 +1251,40 @@ def extract_vhm0_value_port(ds: xr.Dataset, ilat: int, ilon: int):
     return val
 
 
+def _retry_sleep_seconds(attempt: int, base: int = 15, cap: int = 120) -> int:
+    return min(base * (2 ** max(0, attempt - 1)), cap)
+
+
+def fetch_catalog_xml_resilient(url: str, max_retries: int = 4):
+    last_err = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            return fetch_catalog_xml(url)
+        except Exception as e:
+            last_err = e
+            wait_s = _retry_sleep_seconds(attempt)
+            print(f"  [reintento {attempt}/{max_retries}] error catálogo PDE: {e}", flush=True)
+            if attempt < max_retries:
+                time.sleep(wait_s)
+    raise last_err
+
+
+def open_local_nc_from_url_resilient(url: str, max_retries: int = 3):
+    last_err = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            return open_local_nc_from_url(url)
+        except Exception as e:
+            last_err = e
+            wait_s = _retry_sleep_seconds(attempt, base=10, cap=60)
+            print(f"    [reintento {attempt}/{max_retries}] error descargando NC: {url} -> {e}", flush=True)
+            if attempt < max_retries:
+                time.sleep(wait_s)
+    raise last_err
+
+
 def get_port_mesh_inventory() -> Dict[str, Dict]:
-    cache_key = f"port_mesh_inventory_v2_past{PAST_DAYS}_future{PDE_FORECAST_DAYS}.json"
+    cache_key = f"port_mesh_inventory_v3_past{PAST_DAYS}_future{PDE_FORECAST_DAYS}.json"
     cached = load_json_cache(cache_key)
     if cached:
         return cached
@@ -1263,46 +1294,71 @@ def get_port_mesh_inventory() -> Dict[str, Dict]:
     for mesh_key in PORT_MESH_PRIORITY:
         cfg = PORT_MESHES[mesh_key]
 
-        catalog_xml = fetch_catalog_xml(cfg["catalog_xml"])
-        dataset_names = parse_dataset_names(catalog_xml)
-        start_dt, end_dt = get_window_bounds_for_source(PDE_FORECAST_DAYS)
-        files, runs_used, latest_run = select_fc_files_for_window(dataset_names, start_dt, end_dt)
-
-        if not files:
-            raise RuntimeError(f"La malla portuaria {mesh_key} no tiene ficheros horarios disponibles en la ventana solicitada")
-
-        sample_name = files[0]
-        sample_url = cfg["fileserver_base"] + sample_name
-        ds, tmp_name = open_local_nc_from_url(sample_url)
-
         try:
-            lons, lats = get_coord_arrays(ds)
+            catalog_xml = fetch_catalog_xml_resilient(cfg["catalog_xml"], max_retries=4)
+            dataset_names = parse_dataset_names(catalog_xml)
+            start_dt, end_dt = get_window_bounds_for_source(PDE_FORECAST_DAYS)
+            files, runs_used, latest_run = select_fc_files_for_window(dataset_names, start_dt, end_dt)
 
+            if not files:
+                raise RuntimeError(
+                    f"La malla portuaria {mesh_key} no tiene ficheros horarios disponibles en la ventana solicitada"
+                )
+
+            sample_name = files[0]
+            sample_url = cfg["fileserver_base"] + sample_name
+            ds, tmp_name = open_local_nc_from_url_resilient(sample_url, max_retries=3)
+
+            try:
+                lons, lats = get_coord_arrays(ds)
+
+                inventory[mesh_key] = {
+                    "key": mesh_key,
+                    "catalog_xml": cfg["catalog_xml"],
+                    "fileserver_base": cfg["fileserver_base"],
+                    "latest_run": latest_run,
+                    "runs_used": runs_used,
+                    "files": files,
+                    "sample_file": sample_name,
+                    "lon_min": float(np.nanmin(lons)),
+                    "lon_max": float(np.nanmax(lons)),
+                    "lat_min": float(np.nanmin(lats)),
+                    "lat_max": float(np.nanmax(lats)),
+                    "available": True,
+                }
+            finally:
+                try:
+                    ds.close()
+                except Exception:
+                    pass
+                remove_file_safely(tmp_name)
+
+        except Exception as e:
+            print(f"[AVISO] Malla portuaria no disponible ahora mismo: {mesh_key} -> {e}", flush=True)
             inventory[mesh_key] = {
                 "key": mesh_key,
                 "catalog_xml": cfg["catalog_xml"],
                 "fileserver_base": cfg["fileserver_base"],
-                "latest_run": latest_run,
-                "runs_used": runs_used,
-                "files": files,
-                "sample_file": sample_name,
-                "lon_min": float(np.nanmin(lons)),
-                "lon_max": float(np.nanmax(lons)),
-                "lat_min": float(np.nanmin(lats)),
-                "lat_max": float(np.nanmax(lats)),
+                "latest_run": None,
+                "runs_used": [],
+                "files": [],
+                "sample_file": None,
+                "lon_min": None,
+                "lon_max": None,
+                "lat_min": None,
+                "lat_max": None,
+                "available": False,
+                "error": str(e),
             }
-        finally:
-            try:
-                ds.close()
-            except Exception:
-                pass
-            remove_file_safely(tmp_name)
 
     save_json_cache(cache_key, inventory)
     return inventory
 
 
 def point_in_port_mesh(point: Dict, mesh_meta: Dict) -> bool:
+    if not mesh_meta.get("available"):
+        return False
+
     lon = point["lon"]
     lat = point["lat"]
     return (
@@ -1332,12 +1388,11 @@ def assign_points_to_port_meshes(points: List[Dict], inventory: Dict[str, Dict])
     return grouped
 
 
-
 def _process_single_port_hour(nc_name: str, url: str, points: List[Dict], nearest_idxs):
     ds = None
     tmp_name = None
     try:
-        ds, tmp_name = open_local_nc_from_url(url)
+        ds, tmp_name = open_local_nc_from_url_resilient(url, max_retries=3)
         m = re.match(r"HW-(\d{10})-B(\d{10})-FC\.nc", nc_name)
         valid_time = pd.to_datetime(m.group(1), format="%Y%m%d%H", utc=True) if m else pd.NaT
         valid_time_str = valid_time.strftime("%Y-%m-%dT%H:%M:%SZ") if not pd.isna(valid_time) else None
@@ -1368,6 +1423,22 @@ def _process_single_port_hour(nc_name: str, url: str, points: List[Dict], neares
 
 
 def download_port_agitation_for_mesh(points: List[Dict], mesh_meta: Dict):
+    if not mesh_meta.get("available"):
+        print(f"\n[AVISO] Se omite malla {mesh_meta['key']} por indisponibilidad temporal.", flush=True)
+        out = []
+        for p in points:
+            out.append({
+                "point_id": p["point_id"],
+                "name": p["name"],
+                "requested_lon": p["lon"],
+                "requested_lat": p["lat"],
+                "lon": None,
+                "lat": None,
+                "forecast": [],
+                "port_error": f"Malla portuaria temporalmente no disponible: {mesh_meta.get('error', 'sin detalle')}",
+            })
+        return out
+
     print(f"\n[AGITACIÓN {mesh_meta['key'].upper()}]")
     print(f"Run más reciente usado: B{mesh_meta['latest_run']}")
     print(f"Runs usados: {[f'B{r}' for r in mesh_meta.get('runs_used', [])]}")
@@ -1392,7 +1463,7 @@ def download_port_agitation_for_mesh(points: List[Dict], mesh_meta: Dict):
     failed_hours = []
 
     sample_url = mesh_meta["fileserver_base"] + mesh_meta["sample_file"]
-    sample_ds, sample_tmp = open_local_nc_from_url(sample_url)
+    sample_ds, sample_tmp = open_local_nc_from_url_resilient(sample_url, max_retries=3)
     try:
         nearest_idxs = get_nearest_indices_port(sample_ds, points)
         lons, lats = get_coord_arrays(sample_ds)
@@ -1514,12 +1585,15 @@ def download_port_agitation(points):
     print("Mallas portuarias detectadas:")
     for mesh_key in PORT_MESH_PRIORITY:
         meta = inventory[mesh_key]
-        print(
-            f" - {mesh_key}: "
-            f"lon=[{meta['lon_min']:.3f}, {meta['lon_max']:.3f}] | "
-            f"lat=[{meta['lat_min']:.3f}, {meta['lat_max']:.3f}] | "
-            f"run=B{meta['latest_run']}"
-        )
+        if meta.get("available"):
+            print(
+                f" - {mesh_key}: "
+                f"lon=[{meta['lon_min']:.3f}, {meta['lon_max']:.3f}] | "
+                f"lat=[{meta['lat_min']:.3f}, {meta['lat_max']:.3f}] | "
+                f"run=B{meta['latest_run']}"
+            )
+        else:
+            print(f" - {mesh_key}: NO DISPONIBLE ({meta.get('error', 'sin detalle')})")
 
     out = []
 
@@ -1531,9 +1605,9 @@ def download_port_agitation(points):
         print(f"\nAsignados a {mesh_key}: {[p['name'] for p in mesh_points]}")
         out.extend(download_port_agitation_for_mesh(mesh_points, inventory[mesh_key]))
 
-    assigned_names = {p["name"] for p in out}
+    assigned_point_ids = {p["point_id"] for p in out}
     for p in points:
-        if p["name"] not in assigned_names:
+        if p["point_id"] not in assigned_point_ids:
             out.append({
                 "point_id": p["point_id"],
                 "name": p["name"],
@@ -1542,11 +1616,12 @@ def download_port_agitation(points):
                 "lon": None,
                 "lat": None,
                 "forecast": [],
-                "port_error": "Punto fuera de las mallas portuarias configuradas",
+                "port_error": "Punto fuera de las mallas portuarias configuradas o malla no disponible",
             })
 
     out.sort(key=lambda x: x["point_id"])
     return out
+
 
 # =========================
 # 5) FUSIÓN FINAL
