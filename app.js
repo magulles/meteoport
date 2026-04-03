@@ -833,10 +833,10 @@ options: {
     pdeWaveArrowsPlugin: {
       datasetIndex: 2,
       directions: dirCop,
-  topPaddingPx: 16,
-  arrowLengthPx: 12,
-  arrowHeadPx: 4,
-  lineWidth: 1.1
+      topPaddingPx: 16,
+      arrowLengthPx: 12,
+      arrowHeadPx: 4,
+      lineWidth: 1.1
     }
   },
   scales: {
@@ -851,21 +851,10 @@ options: {
         text: "Hs (m)"
       },
       grid: { color: "#e5e7eb" }
-    },
-    /*yWind: {
-      position: "right",
-      beginAtZero: true,
-      title: {
-        display: true,
-        text: "Viento (m/s)"
-      },
-      grid: {
-        drawOnChartArea: false
-      }*/
     }
   }
 },
-    plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin,daySeparatorPlugin]
+plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin, daySeparatorPlugin]
   });
 }
 
