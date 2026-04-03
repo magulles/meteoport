@@ -824,7 +824,8 @@ options: {
             `Tp PdE: ${formatNumber(f.tpPde)} s`,
             `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
             `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`,
-            `Hs Obs: ${formatNumber(f.waveObs)} m`
+            `Hs Obs: ${formatNumber(f.waveObs)} m`,
+            `Viento: ${formatNumber(f.windOpenMeteo)} m
           ];
         }
       }
