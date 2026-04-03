@@ -959,9 +959,9 @@ def _process_single_pde_hour(nc_name: str, url: str, points: List[Dict], nearest
                     ),
                 }
 
-       meta_nc = parse_fc_dataset_name(nc_name)
-       valid_time = meta_nc["valid_dt"] if meta_nc else pd.NaT
-       valid_time_str = valid_time.strftime("%Y-%m-%dT%H:%M:%SZ") if not pd.isna(valid_time) else None
+        meta_nc = parse_fc_dataset_name(nc_name)
+        valid_time = meta_nc["valid_dt"] if meta_nc else pd.NaT
+        valid_time_str = valid_time.strftime("%Y-%m-%dT%H:%M:%SZ") if not pd.isna(valid_time) else None
 
         records_by_pid = {}
         for point, (ilat, ilon) in zip(points, nearest_idxs):
@@ -989,6 +989,7 @@ def _process_single_pde_hour(nc_name: str, url: str, points: List[Dict], nearest
             "point_meta": point_meta,
             "records_by_pid": records_by_pid,
         }
+
     finally:
         if ds is not None:
             try:
@@ -997,7 +998,6 @@ def _process_single_pde_hour(nc_name: str, url: str, points: List[Dict], nearest
                 pass
         remove_file_safely(tmp_name)
         gc.collect()
-
 
 def download_pde_wave_data_for_region(points: List[Dict], region_meta: Dict):
     print(f"\n[PDE {region_meta['key'].upper()}] {region_meta['label']}")
