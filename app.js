@@ -779,7 +779,7 @@ const yMaxChart = maxHs + 0.8;
   spanGaps: true,
   order:-10
 },
-{
+/*{
   label: "Viento",
   data: windOpenMeteo,
   yAxisID: "yWind",
@@ -791,7 +791,7 @@ const yMaxChart = maxHs + 0.8;
   tension: 0.25,
   spanGaps: true,
   borderDash: [6, 4]
-}
+}*/
       ]
     },
 options: {
@@ -852,7 +852,7 @@ options: {
       },
       grid: { color: "#e5e7eb" }
     },
-    yWind: {
+    /*yWind: {
       position: "right",
       beginAtZero: true,
       title: {
@@ -861,7 +861,7 @@ options: {
       },
       grid: {
         drawOnChartArea: false
-      }
+      }*/
     }
   }
 },
