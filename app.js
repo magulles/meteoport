@@ -43,7 +43,7 @@ document.addEventListener("touchstart", function () {}, { passive: true });
 const THRESHOLDS = {
   greenMax: 1.0,
   yellowMax: 2.0,
-  orangeMax: 3.0
+  orangeMax: 3.5
 };
 
 let selectedHour = 0;
