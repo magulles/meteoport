@@ -733,10 +733,34 @@ def fetch_catalog_xml(catalog_url: str, timeout=HTTP_TIMEOUT_CATALOG, max_retrie
 
 
 def parse_dataset_names(catalog_xml: str) -> List[str]:
-    names = re.findall(r'name="(HW-\d{10}-B\d{10}-FC\.nc)"', catalog_xml)
+    """
+    Extrae nombres de datasets FC.nc desde el catálogo THREDDS de forma flexible.
+
+    Acepta cosas como:
+      - HW-2026032701-B2026032700-FC.nc
+      - HM-BAHIA-2026032701-B2026032700-FC.nc
+      - cualquier otro prefijo tipo XXX-YYY-...
+    """
+    pattern = r'([A-Za-z0-9_:-]+-\d{10}-B\d{10}-FC\.nc)'
+
+    found = re.findall(pattern, catalog_xml)
+    names = []
+
+    for item in found:
+        name = str(item).strip().split("/")[-1]
+        if re.match(r'^[A-Za-z0-9_:-]+-\d{10}-B\d{10}-FC\.nc$', name):
+            names.append(name)
+
+    names = sorted(set(names))
+
     if not names:
-        raise RuntimeError("No se encontraron datasets HW-...-FC.nc en el catálogo de Puertos del Estado.")
-    return sorted(set(names))
+        preview = catalog_xml[:1500].replace("\n", " ")
+        raise RuntimeError(
+            "No se encontraron datasets tipo *-YYYYMMDDHH-BYYYYMMDDHH-FC.nc "
+            f"en el catálogo de Puertos del Estado. Preview: {preview}"
+        )
+
+    return names
 
 
 
@@ -935,9 +959,9 @@ def _process_single_pde_hour(nc_name: str, url: str, points: List[Dict], nearest
                     ),
                 }
 
-        m = re.match(r"HW-(\d{10})-B(\d{10})-FC\.nc", nc_name)
-        valid_time = pd.to_datetime(m.group(1), format="%Y%m%d%H", utc=True) if m else pd.NaT
-        valid_time_str = valid_time.strftime("%Y-%m-%dT%H:%M:%SZ") if not pd.isna(valid_time) else None
+       meta_nc = parse_fc_dataset_name(nc_name)
+       valid_time = meta_nc["valid_dt"] if meta_nc else pd.NaT
+       valid_time_str = valid_time.strftime("%Y-%m-%dT%H:%M:%SZ") if not pd.isna(valid_time) else None
 
         records_by_pid = {}
         for point, (ilat, ilon) in zip(points, nearest_idxs):
@@ -1215,12 +1239,14 @@ def parse_dataset_names(catalog_xml: str) -> List[str]:
 
 def parse_fc_dataset_name(name: str):
     """
-    Soporta:
+    Soporta cualquier prefijo antes de la fecha válida.
+    Ejemplos:
       - HW-2026032701-B2026032700-FC.nc
       - HM-BAHIA-2026032701-B2026032700-FC.nc
+      - OTRO-PREFIJO-2026032701-B2026032700-FC.nc
     """
     m = re.match(
-        r"^(?P<prefix>(?:HW|HM(?:-[A-Z0-9_]+)*))-(?P<valid>\d{10})-B(?P<base>\d{10})-FC\.nc$",
+        r'^(?P<prefix>[A-Za-z0-9_:-]+)-(?P<valid>\d{10})-B(?P<base>\d{10})-FC\.nc$',
         name
     )
     if not m:
