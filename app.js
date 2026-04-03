@@ -42,7 +42,8 @@ document.addEventListener("touchstart", function () {}, { passive: true });
 
 const THRESHOLDS = {
   greenMax: 1.0,
-  orangeMax: 2.0
+  yellowMax: 2.0,
+  orangeMax: 3.0
 };
 
 let selectedHour = 0;
@@ -114,16 +115,20 @@ function formatDateTimeLong(isoTime) {
 
 function getColor(hs) {
   if (hs === null || hs === undefined || Number.isNaN(hs)) return "#9ca3af";
-  if (hs <= THRESHOLDS.greenMax) return "green";
-  if (hs <= THRESHOLDS.orangeMax) return "orange";
+
+  if (hs < THRESHOLDS.greenMax) return "green";
+  if (hs < THRESHOLDS.yellowMax) return "yellow";
+  if (hs < THRESHOLDS.orangeMax) return "orange";
   return "red";
 }
 
 function getHexColorFromHs(hs) {
   if (hs === null || hs === undefined || Number.isNaN(hs)) return "#94a3b8";
-  if (hs <= THRESHOLDS.greenMax) return "#16a34a";
-  if (hs <= THRESHOLDS.orangeMax) return "#f59e0b";
-  return "#dc2626";
+
+  if (hs < THRESHOLDS.greenMax) return "#16a34a";   // verde
+  if (hs < THRESHOLDS.yellowMax) return "#eab308";  // amarillo
+  if (hs < THRESHOLDS.orangeMax) return "#f97316";  // naranja
+  return "#dc2626";                                 // rojo
 }
 
 function escapeHtml(text) {
@@ -461,7 +466,7 @@ function renderLocationInfoPanel() {
     return;
   }
 
-  const statusColor = getColor(f.wave);
+ const statusColor = getColor(f.wave) === "yellow" ? "#ca8a04" : getColor(f.wave);
 
   infoPanel.innerHTML = `
     <h3>${escapeHtml(selectedLocation.name)}</h3>
