@@ -41,8 +41,8 @@ document.addEventListener("touchstart", function () {}, { passive: true });
 // ============================
 
 const THRESHOLDS = {
-  greenMax: 1.0,
-  yellowMax: 2.0,
+  greenMax: 1.5,
+  yellowMax: 2.5,
   orangeMax: 3.5
 };
 
