@@ -131,6 +131,41 @@ function getHexColorFromHs(hs) {
   return "#dc2626";                                 // rojo
 }
 
+function getRouteStatus(hs) {
+  if (hs === null || hs === undefined || Number.isNaN(hs)) {
+    return {
+      label: "Sin datos",
+      color: "#64748b"
+    };
+  }
+
+  if (hs < 1) {
+    return {
+      label: "Operativo",
+      color: "#16a34a"
+    };
+  }
+
+  if (hs < 2) {
+    return {
+      label: "Precaución",
+      color: "#eab308"
+    };
+  }
+
+  if (hs < 3) {
+    return {
+      label: "Restricción",
+      color: "#f97316"
+    };
+  }
+
+  return {
+    label: "No recomendable",
+    color: "#dc2626"
+  };
+}
+
 function escapeHtml(text) {
   return String(text ?? "")
     .replace(/&/g, "&amp;")
