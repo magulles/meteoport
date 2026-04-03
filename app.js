@@ -786,7 +786,7 @@ const yMaxChart = maxHs + 1.2;     // techo del gráfico
   label: "Viento",
   data: windOpenMeteo,
   yAxisID: "yWind",
-  borderColor: "#7c3aed",
+  borderColor: "#92400e",
   backgroundColor: "transparent",
   borderWidth: 2,
   pointRadius: 0,
