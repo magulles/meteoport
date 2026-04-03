@@ -679,7 +679,7 @@ function renderChart() {
   const hsObs = forecast.map(f => f.waveObs);
   const dirPde = forecast.map(f => f.dirPde);
   const dirCop = forecast.map(f => f.dirCopernicus);
-
+  const windOpenMeteo = forecast.map(f => f.windSpeed ?? null);
   if (waveChart) {
     waveChart.destroy();
   }
@@ -825,7 +825,7 @@ options: {
             `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
             `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`,
             `Hs Obs: ${formatNumber(f.waveObs)} m`,
-            `Viento: ${formatNumber(f.windOpenMeteo)} m
+            `Viento: ${formatNumber(f.windSpeed)} m/s`
           ];
         }
       }
