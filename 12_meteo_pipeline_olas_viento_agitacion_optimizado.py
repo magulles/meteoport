@@ -309,13 +309,19 @@ def get_window_bounds_for_source(future_days: int):
 
 
 def parse_fc_dataset_name(name: str):
-    m = re.match(r"HW-(\d{10})-B(\d{10})-FC\.nc", name)
+    m = re.match(
+        r'^(?P<prefix>[A-Za-z0-9_:-]+)-(?P<valid>\d{10})-B(?P<base>\d{10})-FC\.nc$',
+        name
+    )
     if not m:
         return None
-    valid_dt = pd.to_datetime(m.group(1), format="%Y%m%d%H", utc=True)
-    base_dt = pd.to_datetime(m.group(2), format="%Y%m%d%H", utc=True)
+
+    valid_dt = pd.to_datetime(m.group("valid"), format="%Y%m%d%H", utc=True)
+    base_dt = pd.to_datetime(m.group("base"), format="%Y%m%d%H", utc=True)
+
     return {
         "name": name,
+        "prefix": m.group("prefix"),
         "valid_dt": valid_dt,
         "base_dt": base_dt,
         "valid_str": valid_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -768,10 +774,10 @@ def choose_latest_run(dataset_names: List[str]) -> Tuple[str, List[str]]:
     by_run: Dict[str, List[str]] = {}
 
     for name in dataset_names:
-        m = re.match(r"HW-(\d{10})-B(\d{10})-FC\.nc", name)
-        if not m:
+        meta = parse_fc_dataset_name(name)
+        if meta is None:
             continue
-        base_time = m.group(2)
+        base_time = meta["base_str"]
         by_run.setdefault(base_time, []).append(name)
 
     if not by_run:
@@ -780,7 +786,6 @@ def choose_latest_run(dataset_names: List[str]) -> Tuple[str, List[str]]:
     latest_run = sorted(by_run.keys())[-1]
     files = sorted(by_run[latest_run])
     return latest_run, files
-
 
 
 def open_local_nc_from_url(url: str, timeout=HTTP_TIMEOUT_FILE, max_retries=5, backoff=8):
@@ -1205,46 +1210,29 @@ PORT_MESH_PRIORITY = list(PORT_MESHES.keys())
 
 
 def parse_dataset_names(catalog_xml: str) -> List[str]:
-    """
-    Extrae nombres de datasets FC.nc desde el catálogo THREDDS.
-    Soporta formatos como:
-      - HW-2026032701-B2026032700-FC.nc
-      - HM-BAHIA-2026032701-B2026032700-FC.nc
-    """
-    patterns = [
-        r'name="((?:HW|HM(?:-[A-Z0-9_]+)*)-\d{10}-B\d{10}-FC\.nc)"',
-        r'urlPath="([^"]*((?:HW|HM(?:-[A-Z0-9_]+)*)-\d{10}-B\d{10}-FC\.nc))"',
-        r'((?:HW|HM(?:-[A-Z0-9_]+)*)-\d{10}-B\d{10}-FC\.nc)',
-    ]
+    pattern = r'([A-Za-z0-9_:-]+-\d{10}-B\d{10}-FC\.nc)'
 
-    found = []
-    for pat in patterns:
-        matches = re.findall(pat, catalog_xml)
-        for m in matches:
-            if isinstance(m, tuple):
-                m = m[-1]
-            name = str(m).strip().split("/")[-1]
-            found.append(name)
+    found = re.findall(pattern, catalog_xml)
+    names = []
 
-    names = sorted(set(found))
+    for item in found:
+        name = str(item).strip().split("/")[-1]
+        if re.match(r'^[A-Za-z0-9_:-]+-\d{10}-B\d{10}-FC\.nc$', name):
+            names.append(name)
+
+    names = sorted(set(names))
 
     if not names:
+        preview = catalog_xml[:1500].replace("\n", " ")
         raise RuntimeError(
-            "No se encontraron datasets tipo HW-...-FC.nc ni HM-...-FC.nc "
-            "en el catálogo de Puertos del Estado."
+            "No se encontraron datasets tipo *-YYYYMMDDHH-BYYYYMMDDHH-FC.nc "
+            f"en el catálogo de Puertos del Estado. Preview: {preview}"
         )
 
     return names
 
 
 def parse_fc_dataset_name(name: str):
-    """
-    Soporta cualquier prefijo antes de la fecha válida.
-    Ejemplos:
-      - HW-2026032701-B2026032700-FC.nc
-      - HM-BAHIA-2026032701-B2026032700-FC.nc
-      - OTRO-PREFIJO-2026032701-B2026032700-FC.nc
-    """
     m = re.match(
         r'^(?P<prefix>[A-Za-z0-9_:-]+)-(?P<valid>\d{10})-B(?P<base>\d{10})-FC\.nc$',
         name
@@ -1263,7 +1251,6 @@ def parse_fc_dataset_name(name: str):
         "valid_str": valid_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "base_str": base_dt.strftime("%Y%m%d%H"),
     }
-
 
 def choose_latest_run(dataset_names: List[str]) -> Tuple[str, List[str]]:
     by_run: Dict[str, List[str]] = {}
