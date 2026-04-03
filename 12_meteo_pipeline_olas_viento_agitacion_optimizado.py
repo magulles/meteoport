@@ -1146,7 +1146,6 @@ def download_pde_wave_data(points):
     out.sort(key=lambda x: x['point_id'])
     return out
 
-
 # =========================
 # 4) AGITACION
 # =========================
@@ -1181,6 +1180,83 @@ PORT_MESHES = {
 PORT_MESH_PRIORITY = list(PORT_MESHES.keys())
 
 
+def parse_dataset_names(catalog_xml: str) -> List[str]:
+    """
+    Extrae nombres de datasets FC.nc desde el catálogo THREDDS.
+    Soporta formatos como:
+      - HW-2026032701-B2026032700-FC.nc
+      - HM-BAHIA-2026032701-B2026032700-FC.nc
+    """
+    patterns = [
+        r'name="((?:HW|HM(?:-[A-Z0-9_]+)*)-\d{10}-B\d{10}-FC\.nc)"',
+        r'urlPath="([^"]*((?:HW|HM(?:-[A-Z0-9_]+)*)-\d{10}-B\d{10}-FC\.nc))"',
+        r'((?:HW|HM(?:-[A-Z0-9_]+)*)-\d{10}-B\d{10}-FC\.nc)',
+    ]
+
+    found = []
+    for pat in patterns:
+        matches = re.findall(pat, catalog_xml)
+        for m in matches:
+            if isinstance(m, tuple):
+                m = m[-1]
+            name = str(m).strip().split("/")[-1]
+            found.append(name)
+
+    names = sorted(set(found))
+
+    if not names:
+        raise RuntimeError(
+            "No se encontraron datasets tipo HW-...-FC.nc ni HM-...-FC.nc "
+            "en el catálogo de Puertos del Estado."
+        )
+
+    return names
+
+
+def parse_fc_dataset_name(name: str):
+    """
+    Soporta:
+      - HW-2026032701-B2026032700-FC.nc
+      - HM-BAHIA-2026032701-B2026032700-FC.nc
+    """
+    m = re.match(
+        r"^(?P<prefix>(?:HW|HM(?:-[A-Z0-9_]+)*))-(?P<valid>\d{10})-B(?P<base>\d{10})-FC\.nc$",
+        name
+    )
+    if not m:
+        return None
+
+    valid_dt = pd.to_datetime(m.group("valid"), format="%Y%m%d%H", utc=True)
+    base_dt = pd.to_datetime(m.group("base"), format="%Y%m%d%H", utc=True)
+
+    return {
+        "name": name,
+        "prefix": m.group("prefix"),
+        "valid_dt": valid_dt,
+        "base_dt": base_dt,
+        "valid_str": valid_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "base_str": base_dt.strftime("%Y%m%d%H"),
+    }
+
+
+def choose_latest_run(dataset_names: List[str]) -> Tuple[str, List[str]]:
+    by_run: Dict[str, List[str]] = {}
+
+    for name in dataset_names:
+        meta = parse_fc_dataset_name(name)
+        if meta is None:
+            continue
+        base_time = meta["base_str"]
+        by_run.setdefault(base_time, []).append(name)
+
+    if not by_run:
+        raise RuntimeError("No se pudo agrupar ningún dataset de PDE por run.")
+
+    latest_run = sorted(by_run.keys())[-1]
+    files = sorted(by_run[latest_run])
+    return latest_run, files
+
+
 def get_coord_names(ds: xr.Dataset) -> Tuple[str, str]:
     lon_candidates = ["lon", "longitude", "LON"]
     lat_candidates = ["lat", "latitude", "LAT"]
@@ -1203,9 +1279,7 @@ def get_coord_arrays(ds: xr.Dataset) -> Tuple[np.ndarray, np.ndarray]:
 
 def build_lonlat_2d(ds: xr.Dataset) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Devuelve SIEMPRE lon/lat como malla 2D.
-    - Si lon/lat ya son 2D, los devuelve tal cual.
-    - Si lon/lat son 1D, construye la malla con meshgrid.
+    Devuelve siempre lon/lat como malla 2D.
     """
     lons, lats = get_coord_arrays(ds)
 
@@ -1223,8 +1297,7 @@ def build_lonlat_2d(ds: xr.Dataset) -> Tuple[np.ndarray, np.ndarray]:
 
 def get_nearest_indices_port(ds: xr.Dataset, points: List[Dict]) -> List[Tuple[int, int]]:
     """
-    Devuelve siempre índices (ilat, ilon), independientemente de si lon/lat
-    vienen en 1D o en 2D.
+    Devuelve siempre índices (ilat, ilon), tanto si lon/lat vienen en 1D como en 2D.
     """
     lon2d, lat2d = build_lonlat_2d(ds)
 
@@ -1250,8 +1323,7 @@ def read_grid_lon_lat(ds: xr.Dataset, ilat: int, ilon: int) -> Tuple[float, floa
 
 def extract_vhm0_value_port(ds: xr.Dataset, ilat: int, ilon: int):
     """
-    Extrae VHM0 en la celda (ilat, ilon) de forma robusta.
-    Funciona tanto si las coordenadas del dataset son 1D como 2D.
+    Extrae VHM0 en la celda (ilat, ilon).
     """
     if "VHM0" not in ds.variables:
         return None
@@ -1379,8 +1451,8 @@ def _process_single_port_hour(nc_name: str, url: str, points: List[Dict], neares
     try:
         ds, tmp_name = open_local_nc_from_url(url)
 
-        m = re.match(r"HW-(\d{10})-B(\d{10})-FC\.nc", nc_name)
-        valid_time = pd.to_datetime(m.group(1), format="%Y%m%d%H", utc=True) if m else pd.NaT
+        meta_nc = parse_fc_dataset_name(nc_name)
+        valid_time = meta_nc["valid_dt"] if meta_nc else pd.NaT
         valid_time_str = valid_time.strftime("%Y-%m-%dT%H:%M:%SZ") if not pd.isna(valid_time) else None
 
         records_by_pid = {}
@@ -1597,6 +1669,8 @@ def download_port_agitation(points):
 
     out.sort(key=lambda x: x["point_id"])
     return out
+
+
 
 # =========================
 # 5) FUSIÓN FINAL
