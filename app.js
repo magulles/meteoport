@@ -781,6 +781,19 @@ const yMaxChart = maxHs + 0.7;     // techo del gráfico
   borderDash: [],              
   spanGaps: true,
   order:-10
+},
+{
+  label: "Viento",
+  data: windOpenMeteo,
+  yAxisID: "yWind",
+  borderColor: "#2563eb",
+  backgroundColor: "transparent",
+  borderWidth: 2,
+  pointRadius: 0,
+  pointHoverRadius: 4,
+  tension: 0.25,
+  spanGaps: true,
+  borderDash: [6, 4]
 }
       ]
     },
@@ -837,7 +850,18 @@ options: {
     text: "Hs (m)"
   },
   grid: { color: "#e5e7eb" },
-}
+},
+    yWind: {
+    position: "right",
+    beginAtZero: true,
+    title: {
+      display: true,
+      text: "Viento (m/s)"
+    },
+    grid: {
+      drawOnChartArea: false   // 👈 clave para que no ensucie la gráfica
+    }
+  }
   }
 },
     plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin,daySeparatorPlugin]
