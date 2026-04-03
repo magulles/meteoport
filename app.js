@@ -597,7 +597,7 @@ const pdeWaveArrowsPlugin = {
   afterDatasetsDraw(chart, args, options) {
     const datasetIndex = options?.datasetIndex ?? 2;
     const directions = options?.directions ?? [];
-    const topPaddingPx = options?.topPaddingPx ?? 18;
+    const topPaddingPx = options?.topPaddingPx ?? 10;
     const arrowYValue = options?.arrowYValue ?? null;
     const arrowLengthPx = options?.arrowLengthPx ?? 14;
     const arrowHeadPx = options?.arrowHeadPx ?? 5;
