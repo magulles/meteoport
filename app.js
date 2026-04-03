@@ -843,25 +843,25 @@ options: {
       grid: { color: "#eef2f7" }
     },
     y: {
-   beginAtZero: true,
-  max: yMaxChart,
-  title: {
-    display: true,
-    text: "Hs (m)"
-  },
-  grid: { color: "#e5e7eb" },
-},
-    yWind: {
-    position: "right",
-    beginAtZero: true,
-    title: {
-      display: true,
-      text: "Viento (m/s)"
+      beginAtZero: true,
+      max: yMaxChart,
+      title: {
+        display: true,
+        text: "Hs (m)"
+      },
+      grid: { color: "#e5e7eb" }
     },
-    grid: {
-      drawOnChartArea: false   // 👈 clave para que no ensucie la gráfica
+    yWind: {
+      position: "right",
+      beginAtZero: true,
+      title: {
+        display: true,
+        text: "Viento (m/s)"
+      },
+      grid: {
+        drawOnChartArea: false
+      }
     }
-  }
   }
 },
     plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin,daySeparatorPlugin]
