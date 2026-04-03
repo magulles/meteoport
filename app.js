@@ -415,12 +415,12 @@ function initMarkers() {
       }).addTo(map);
     } else {
       marker = L.circleMarker(loc.coords, {
-        radius: 4,
-        color,
-        fillColor: color,
-        fillOpacity: 0.85,
-        weight: 2
-      }).addTo(map);
+  radius: 2,        // muy limpio
+  color: "#1f2937",
+  fillColor: "#1f2937",
+  fillOpacity: 0.9,
+  weight: 1
+}).addTo(map);
     }
 
     marker.bindTooltip(loc.name, { direction: "top", offset: [0, -6] });
