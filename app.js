@@ -404,7 +404,7 @@ function initMarkers() {
 
   locations.forEach(loc => {
     const f = loc.forecast[selectedHour];
-    const color = f ? getColor(f.wave) : "#9ca3af";
+    const color = "#374151"; // gris oscuro fijo
     const isObsPoint = loc.name?.toLowerCase().startsWith("boya");
 
     let marker;
@@ -440,7 +440,7 @@ function initMarkers() {
 function updateMarkers() {
   markers.forEach(({ marker, loc, isObsPoint }) => {
     const f = loc.forecast[selectedHour];
-    const color = f ? getColor(f.wave) : "#9ca3af";
+    const color = "#374151"; // gris oscuro fijo
 
     if (!isObsPoint && marker.setStyle) {
       marker.setStyle({ color, fillColor: color });
