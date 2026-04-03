@@ -619,10 +619,8 @@ const pdeWaveArrowsPlugin = {
     ctx.fillStyle = color;
     ctx.lineWidth = lineWidth;
 
-    const yFixed = arrowYValue !== null
-      ? yScale.getPixelForValue(arrowYValue)
-      : chartArea.top + topPaddingPx;
-
+  const yFixed = chartArea.top + topPaddingPx;
+    
     meta.data.forEach((pointEl, i) => {
       const hsValue = dataset.data[i];
       const dirFrom = directions[i];
@@ -727,9 +725,8 @@ const allHs = [
 ].filter(v => v != null && !Number.isNaN(v));
 
 const maxHs = Math.max(...allHs);
-const arrowYValue = maxHs + 0.6;   // donde van las flechas
-const yMaxChart = maxHs + 1.2;     // techo del gráfico  
-
+const yMaxChart = maxHs + 0.8;
+  
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
@@ -836,7 +833,10 @@ options: {
     pdeWaveArrowsPlugin: {
       datasetIndex: 2,
       directions: dirCop,
-      arrowYValue: arrowYValue
+  topPaddingPx: 16,
+  arrowLengthPx: 12,
+  arrowHeadPx: 4,
+  lineWidth: 1.1
     }
   },
   scales: {
