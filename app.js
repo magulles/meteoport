@@ -727,8 +727,8 @@ const allHs = [
 ].filter(v => v != null && !Number.isNaN(v));
 
 const maxHs = Math.max(...allHs);
-const arrowYValue = maxHs + 0.3;   // donde van las flechas
-const yMaxChart = maxHs + 0.7;     // techo del gráfico  
+const arrowYValue = maxHs + 0.6;   // donde van las flechas
+const yMaxChart = maxHs + 1.2;     // techo del gráfico  
 
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
@@ -786,7 +786,7 @@ const yMaxChart = maxHs + 0.7;     // techo del gráfico
   label: "Viento",
   data: windOpenMeteo,
   yAxisID: "yWind",
-  borderColor: "#2563eb",
+  borderColor: "#7c3aed"",
   backgroundColor: "transparent",
   borderWidth: 2,
   pointRadius: 0,
