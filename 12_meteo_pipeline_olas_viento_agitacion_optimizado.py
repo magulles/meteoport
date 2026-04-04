@@ -64,8 +64,8 @@ PDE_FORECAST_HOURS = PDE_FORECAST_DAYS * 24
 PDE_TOTAL_HOURS = (PAST_DAYS * 24) + PDE_FORECAST_HOURS
 
 # --- Copernicus olas ---
-#COPERNICUS_DATASET_ID = "cmems_mod_ibi_wav_anfc_0.027deg_PT1H-i"
-COPERNICUS_DATASET_ID = "cmems_mod_glo_wav_anfc_0.083deg_PT3H-i"
+COPERNICUS_DATASET_ID = "cmems_mod_ibi_wav_anfc_0.027deg_PT1H-i"
+#COPERNICUS_DATASET_ID = "cmems_mod_glo_wav_anfc_0.083deg_PT3H-i"
 
 COPERNICUS_USERNAME = os.environ["COPERNICUS_USERNAME"]
 COPERNICUS_PASSWORD = os.environ["COPERNICUS_PASSWORD"]
