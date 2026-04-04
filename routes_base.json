@@ -71,7 +71,6 @@
     "departure_time": "2026-03-29T07:00:00Z",
     "arrival_time": "2026-03-29T08:00:00Z",
     "points": [
-      "algeciras1_puerto",
       "algeciras2_puerto",
       "algeciras3_puerto",
       "algeciras",
@@ -86,7 +85,6 @@
     "departure_time": "2026-03-29T07:00:00Z",
     "arrival_time": "2026-03-29T08:00:00Z",
     "points": [
-      "algeciras1_puerto",
       "algeciras2_puerto",
       "algeciras3_puerto",
       "algeciras",
@@ -241,7 +239,6 @@
       "baralc1",
       "baralc2",
       "barciud1",
-      "baralc3",
       "alciud3",
       "ciudadela"
     ]
