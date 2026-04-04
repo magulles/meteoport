@@ -73,6 +73,7 @@
     "points": [
       "algeciras1_puerto",
       "algeciras2_puerto",
+      "algeciras3_puerto",
       "algeciras",
       "algetanger1",
       "tangemed"
@@ -86,6 +87,7 @@
     "points": [
       "algeciras1_puerto",
       "algeciras2_puerto",
+      "algeciras3_puerto",
       "algeciras",
       "algeceuta1",
       "ceuta"
@@ -101,7 +103,7 @@
       "valencia2_puerto",
       "valencia",
       "valarg1",
-      "denibi1",
+      "denibi0",
       "valmost1",
       "valmost2",
       "valmost3",
@@ -133,6 +135,7 @@
     "arrival_time": "2026-04-04T19:00:00Z",
     "points": [
       "denia",
+      "denibi0",
       "denibi1",
       "denibi2",
       "denibi3",
@@ -146,9 +149,9 @@
     "arrival_time": "2026-04-04T19:00:00Z",
     "points": [
       "denia",
+      "denibi0",
       "denibi1",
       "denibi2",
-      "denibi3",
       "denibisur1",
       "denibisur2",
       "ibiza"
@@ -173,6 +176,7 @@
     "arrival_time": "2026-04-04T09:45:00Z",
     "points": [
       "alcudia",
+      "baralc5",
       "alciud2",
       "alciud3",
       "ciudadela"
@@ -222,6 +226,7 @@
       "baralc2",
       "baralc3",
       "baralc4",
+      "baralc5",
       "alcudia"
     ]
   },
@@ -234,6 +239,7 @@
       "boya1",
       "baralc1",
       "baralc2",
+      "barciud1",
       "baralc3",
       "alciud3",
       "ciudadela"
