@@ -5,6 +5,7 @@ import json
 import shutil
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import copernicusmarine
 import numpy as np
@@ -25,6 +26,8 @@ OUTPUT_JSON = "boyas_obs_1day.json"
 
 USERNAME = os.environ["COPERNICUS_USERNAME"]
 PASSWORD = os.environ["COPERNICUS_PASSWORD"]
+
+MAX_WORKERS = int(os.getenv("METEOPORT_MAX_WORKERS_OBS", "4"))
 
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -139,7 +142,6 @@ def resample_to_hourly(times, values, target_day):
 
         s = s.reindex(s.index.union(hourly_index)).sort_index()
         s_interp = s.interpolate(method="time")
-
         s_hourly = s_interp.reindex(hourly_index)
 
         return hourly_index.to_pydatetime(), s_hourly.values
@@ -227,9 +229,6 @@ def extract_records(nc_path):
         hs_values = extract_vhm0(ds[hs_name], time_name) if hs_name else None
         wspd_values = extract_wspd(ds[wspd_name], time_name) if wspd_name else None
 
-        # =========================
-        # INTERPOLACIÓN
-        # =========================
         if hs_values is not None and len(times) != 24:
             times, hs_values = resample_to_hourly(times, hs_values, wanted_day())
 
@@ -237,10 +236,6 @@ def extract_records(nc_path):
             _, wspd_values = resample_to_hourly(times, wspd_values, wanted_day())
 
         ntime = len(times)
-
-        # =========================
-        # BUILD RECORDS
-        # =========================
         records = []
 
         for i in range(ntime):
@@ -259,6 +254,34 @@ def extract_records(nc_path):
         return records
 
 
+def process_buoy(buoy, day):
+    name = buoy["name"]
+    ident = buoy["identifier"]
+
+    filenames = build_filenames(ident, day)
+
+    path = None
+    downloaded_filename = None
+
+    for filename in filenames:
+        path = download_file(filename)
+        if path:
+            downloaded_filename = filename
+            print(f"[OK] descargado {filename}")
+            break
+
+    if path and path.exists():
+        try:
+            records = extract_records(path)
+            return name, records
+        except Exception as e:
+            print(f"[WARN] error leyendo {ident}: {e}")
+            return name, []
+    else:
+        print(f"[WARN] no encontrado {ident}")
+        return name, []
+
+
 # =========================
 # MAIN
 # =========================
@@ -275,29 +298,38 @@ def main():
         "buoys": {}
     }
 
-    for buoy in buoys:
-        name = buoy["name"]
-        ident = buoy["identifier"]
+    print("\n" + "=" * 60)
+    print("DESCARGA OBSERVACIONES BOYAS COPERNICUS")
+    print("=" * 60)
+    print(f"Fecha objetivo: {yyyymmdd(day)}")
+    print(f"Boyas a procesar: {len(buoys)}")
+    print(f"Workers: {MAX_WORKERS}")
 
-        filenames = build_filenames(ident, day)
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        future_to_buoy = {
+            executor.submit(process_buoy, buoy, day): buoy
+            for buoy in buoys
+        }
 
-        path = None
-        for filename in filenames:
-            path = download_file(filename)
-            if path:
-                print(f"[OK] descargado {filename}")
-                break
+        completed = 0
+        total = len(future_to_buoy)
 
-        if path and path.exists():
+        for future in as_completed(future_to_buoy):
+            buoy = future_to_buoy[future]
+            name = buoy["name"]
+
             try:
-                records = extract_records(path)
-                result["buoys"][name] = records
+                buoy_name, records = future.result()
+                result["buoys"][buoy_name] = records
             except Exception as e:
-                print(f"[WARN] error leyendo {ident}: {e}")
+                print(f"[WARN] fallo inesperado en {name}: {e}")
                 result["buoys"][name] = []
-        else:
-            print(f"[WARN] no encontrado {ident}")
-            result["buoys"][name] = []
+
+            completed += 1
+            print(f"[{completed}/{total}] completada {name}")
+
+    # opcional: ordenar por nombre para JSON estable
+    result["buoys"] = dict(sorted(result["buoys"].items(), key=lambda kv: kv[0]))
 
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
