@@ -23,8 +23,8 @@ BUOYS_FILE = "id_boyas.txt"
 DOWNLOAD_DIR = Path("copernicus_boyas_tmp")
 OUTPUT_JSON = "boyas_obs_1day.json"
 
-USERNAME = os.getenv("COPERNICUS_USERNAME", "magulles2")
-PASSWORD = os.getenv("COPERNICUS_PASSWORD", "MiguelCMEMS2017")
+USERNAME = os.environ["COPERNICUS_USERNAME"]
+PASSWORD = os.environ["COPERNICUS_PASSWORD"]
 
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
