@@ -243,4 +243,16 @@
       "ciudadela"
     ]
   }
+  ,
+  {
+    "id": "ruta_17",
+    "name": "mia-bim",
+    "departure_time": "2026-04-03T08:00:00Z",
+    "arrival_time": "2026-04-03T10:00:00Z",
+    "points": [
+      "miami",
+      "miami1",
+      "bimini"
+    ]
+  }
 ]
