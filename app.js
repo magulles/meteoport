@@ -683,35 +683,91 @@ function renderChart() {
   }
 
 const daySeparatorPlugin = {
-  id: 'daySeparatorPlugin',
+  id: "daySeparatorPlugin",
   afterDraw(chart) {
     const { ctx, chartArea, scales } = chart;
     const xScale = scales.x;
-    const labels = chart.data.labels || [];
+    const forecast = chart.config.options?.plugins?.daySeparatorPlugin?.forecast || [];
 
-    if (!xScale || !labels.length) return;
+    if (!xScale || !forecast.length) return;
 
-    ctx.save();
-    ctx.strokeStyle = 'rgba(70, 70, 70, 0.25)';
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([4, 4]);
+    const dayGroups = [];
+    let currentGroup = null;
 
-    for (let i = 1; i < labels.length; i++) {
-      const prev = labels[i - 1];
-      const curr = labels[i];
+    for (let i = 0; i < forecast.length; i++) {
+      const t = forecast[i]?.time;
+      if (!t) continue;
 
-      const prevDay = prev.split('-')[1];
-      const currDay = curr.split('-')[1];
+      const d = new Date(t);
+      const dayKey = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
 
-      if (prevDay !== currDay) {
-        const x = xScale.getPixelForValue(i);
-
-        ctx.beginPath();
-        ctx.moveTo(x, chartArea.top);
-        ctx.lineTo(x, chartArea.bottom);
-        ctx.stroke();
+      if (!currentGroup || currentGroup.dayKey !== dayKey) {
+        currentGroup = {
+          dayKey,
+          startIndex: i,
+          endIndex: i,
+          date: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+        };
+        dayGroups.push(currentGroup);
+      } else {
+        currentGroup.endIndex = i;
       }
     }
+
+    if (!dayGroups.length) return;
+
+    const todayRef = new Date();
+    const todayUtc = new Date(Date.UTC(
+      todayRef.getUTCFullYear(),
+      todayRef.getUTCMonth(),
+      todayRef.getUTCDate()
+    ));
+
+    function diffDays(dateA, dateB) {
+      return Math.round((dateA - dateB) / 86400000);
+    }
+
+    function getDayLabel(dayDate) {
+      const d = diffDays(dayDate, todayUtc);
+
+      if (d === -1) return "ayer";
+      if (d === 0) return "hoy";
+      if (d > 0) return `+${d}d`;
+      return `${d}d`;
+    }
+
+    ctx.save();
+
+    // 1) separadores verticales
+    ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
+    ctx.lineWidth = 1.1;
+    ctx.setLineDash([4, 4]);
+
+    for (let i = 1; i < dayGroups.length; i++) {
+      const x = xScale.getPixelForValue(dayGroups[i].startIndex);
+      ctx.beginPath();
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.stroke();
+    }
+
+    // 2) etiquetas de día arriba
+    ctx.setLineDash([]);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.font = "600 11px sans-serif";
+
+    dayGroups.forEach(group => {
+      const x1 = xScale.getPixelForValue(group.startIndex);
+      const x2 = xScale.getPixelForValue(group.endIndex);
+      const xMid = (x1 + x2) / 2;
+
+      const label = getDayLabel(group.date);
+      const isToday = label === "hoy";
+
+      ctx.fillStyle = isToday ? "#111827" : "#6b7280";
+      ctx.fillText(label, xMid, chartArea.top - 6);
+    });
 
     ctx.restore();
   }
@@ -802,6 +858,9 @@ options: {
     intersect: false
   },
   plugins: {
+    daySeparatorPlugin: {
+      forecast
+    },
     tooltip: {
       callbacks: {
         title: items => {
@@ -833,7 +892,7 @@ options: {
     pdeWaveArrowsPlugin: {
       datasetIndex: 2,
       directions: dirCop,
-      topPaddingPx: 16,
+      topPaddingPx: 22,
       arrowLengthPx: 12,
       arrowHeadPx: 4,
       lineWidth: 1.1
