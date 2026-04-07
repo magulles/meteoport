@@ -922,6 +922,8 @@ const yMaxChart = maxHs + 0.8;
 },
 plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin, daySeparatorPlugin]
 });   // 👈 ESTO FALTA
+}      // cierra renderChart()
+
 function updateChartCursorOnly() {
   if (!waveChart) return;
   waveChart.options.plugins.verticalCursorPlugin.selectedIndex = selectedHour;
