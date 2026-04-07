@@ -904,7 +904,7 @@ const yMaxChart = maxHs + 0.8;
       arrowHeadPx: 4,
       lineWidth: 1.1
     }
-  },
+  }, // 👈 ESTA LLAVE ES CLAVE
   scales: {
     x: {
       grid: { color: "#eef2f7" }
