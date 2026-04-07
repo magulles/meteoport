@@ -691,6 +691,10 @@ const daySeparatorPlugin = {
 
     if (!xScale || !forecast.length) return;
 
+    // ============================
+    // AGRUPAR POR DÍAS (UTC)
+    // ============================
+
     const dayGroups = [];
     let currentGroup = null;
 
@@ -716,6 +720,10 @@ const daySeparatorPlugin = {
 
     if (!dayGroups.length) return;
 
+    // ============================
+    // FUNCIONES AUX
+    // ============================
+
     const todayRef = new Date();
     const todayUtc = new Date(Date.UTC(
       todayRef.getUTCFullYear(),
@@ -735,47 +743,58 @@ const daySeparatorPlugin = {
       return `${d}d`;
     }
 
+    function getPixelForTimeBoundary(targetMs) {
+      let i = forecast.findIndex(f => new Date(f.time).getTime() >= targetMs);
+
+      if (i === -1) return chartArea.right;
+      if (i === 0) return chartArea.left;
+
+      const t1 = new Date(forecast[i - 1].time).getTime();
+      const t2 = new Date(forecast[i].time).getTime();
+      const x1 = xScale.getPixelForValue(i - 1);
+      const x2 = xScale.getPixelForValue(i);
+
+      const ratio = (targetMs - t1) / (t2 - t1);
+      return x1 + ratio * (x2 - x1);
+    }
+
     ctx.save();
 
-    // 0) sombreado de hoy
-    dayGroups.forEach(group => {
-     const label = getDayLabel(group.date);
-     if (label !== "hoy") return;
+    // ============================
+    // 0) SOMBREADO DE HOY (UTC)
+    // ============================
 
-      const start = group.startIndex;
-      const end = group.endIndex;
+    const now = new Date();
 
-      const xStart = xScale.getPixelForValue(start);
-      const xEnd = xScale.getPixelForValue(end);
+    const startToday = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      0, 0, 0
+    );
 
-      let leftEdge;
-      let rightEdge;
+    const startTomorrow = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + 1,
+      0, 0, 0
+    );
 
-      if (start > 0) {
-      const xPrev = xScale.getPixelForValue(start - 1);
-      leftEdge = (xPrev + xStart) / 2;
-      } else {
-      const xNext = xScale.getPixelForValue(start + 1);
-      leftEdge = xStart - (xNext - xStart) / 2;
-      }
+    const leftEdge = getPixelForTimeBoundary(startToday);
+    const rightEdge = getPixelForTimeBoundary(startTomorrow);
 
-      if (end < forecast.length - 1) {
-      const xNext = xScale.getPixelForValue(end + 1);
-      rightEdge = (xEnd + xNext) / 2;
-      } else {
-      const xPrev = xScale.getPixelForValue(end - 1);
-      rightEdge = xEnd + (xEnd - xPrev) / 2;
-      }
+    ctx.fillStyle = "rgba(37, 99, 235, 0.05)";
+    ctx.fillRect(
+      leftEdge,
+      chartArea.top,
+      rightEdge - leftEdge,
+      chartArea.bottom - chartArea.top
+    );
 
-      ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
-     ctx.fillRect(
-    leftEdge,
-    chartArea.top,
-    rightEdge - leftEdge,
-    chartArea.bottom - chartArea.top
-      );
-    });
-    // 1) separadores verticales
+    // ============================
+    // 1) SEPARADORES
+    // ============================
+
     ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
     ctx.lineWidth = 1.1;
     ctx.setLineDash([4, 4]);
@@ -788,7 +807,10 @@ const daySeparatorPlugin = {
       ctx.stroke();
     }
 
-    // 2) etiquetas abajo
+    // ============================
+    // 2) ETIQUETAS ABAJO
+    // ============================
+
     ctx.setLineDash([]);
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
@@ -800,6 +822,7 @@ const daySeparatorPlugin = {
       const xMid = (x1 + x2) / 2;
 
       const label = getDayLabel(group.date);
+
       ctx.fillStyle = label === "hoy" ? "#111827" : "#6b7280";
       ctx.fillText(label, xMid, chartArea.bottom + 6);
     });
