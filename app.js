@@ -729,14 +729,25 @@ const daySeparatorPlugin = {
 
     function getDayLabel(dayDate) {
       const d = diffDays(dayDate, todayUtc);
-
-      if (d === -1) return "-1d";
+      if (d === -1) return "ayer";
       if (d === 0) return "hoy";
       if (d > 0) return `+${d}d`;
       return `${d}d`;
     }
 
     ctx.save();
+
+    // 0) sombreado de hoy
+    dayGroups.forEach(group => {
+      const label = getDayLabel(group.date);
+      if (label !== "hoy") return;
+
+      const x1 = xScale.getPixelForValue(group.startIndex);
+      const x2 = xScale.getPixelForValue(group.endIndex);
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
+      ctx.fillRect(x1, chartArea.top, x2 - x1, chartArea.bottom - chartArea.top);
+    });
 
     // 1) separadores verticales
     ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
@@ -751,7 +762,7 @@ const daySeparatorPlugin = {
       ctx.stroke();
     }
 
-    // 2) etiquetas de día arriba
+    // 2) etiquetas abajo
     ctx.setLineDash([]);
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
@@ -763,9 +774,7 @@ const daySeparatorPlugin = {
       const xMid = (x1 + x2) / 2;
 
       const label = getDayLabel(group.date);
-      const isToday = label === "hoy";
-
-      ctx.fillStyle = isToday ? "#111827" : "#6b7280";
+      ctx.fillStyle = label === "hoy" ? "#111827" : "#6b7280";
       ctx.fillText(label, xMid, chartArea.bottom + 6);
     });
 
