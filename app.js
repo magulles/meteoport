@@ -739,16 +739,42 @@ const daySeparatorPlugin = {
 
     // 0) sombreado de hoy
     dayGroups.forEach(group => {
-      const label = getDayLabel(group.date);
-      if (label !== "hoy") return;
+     const label = getDayLabel(group.date);
+     if (label !== "hoy") return;
 
-      const x1 = xScale.getPixelForValue(group.startIndex);
-      const x2 = xScale.getPixelForValue(group.endIndex);
+      const start = group.startIndex;
+      const end = group.endIndex;
+
+      const xStart = xScale.getPixelForValue(start);
+      const xEnd = xScale.getPixelForValue(end);
+
+      let leftEdge;
+      let rightEdge;
+
+      if (start > 0) {
+      const xPrev = xScale.getPixelForValue(start - 1);
+      leftEdge = (xPrev + xStart) / 2;
+      } else {
+      const xNext = xScale.getPixelForValue(start + 1);
+      leftEdge = xStart - (xNext - xStart) / 2;
+      }
+
+      if (end < forecast.length - 1) {
+      const xNext = xScale.getPixelForValue(end + 1);
+      rightEdge = (xEnd + xNext) / 2;
+      } else {
+      const xPrev = xScale.getPixelForValue(end - 1);
+      rightEdge = xEnd + (xEnd - xPrev) / 2;
+      }
 
       ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
-      ctx.fillRect(x1, chartArea.top, x2 - x1, chartArea.bottom - chartArea.top);
+     ctx.fillRect(
+    leftEdge,
+    chartArea.top,
+    rightEdge - leftEdge,
+    chartArea.bottom - chartArea.top
+      );
     });
-
     // 1) separadores verticales
     ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
     ctx.lineWidth = 1.1;
