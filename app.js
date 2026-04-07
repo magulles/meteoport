@@ -730,7 +730,7 @@ const daySeparatorPlugin = {
     function getDayLabel(dayDate) {
       const d = diffDays(dayDate, todayUtc);
 
-      if (d === -1) return "ayer";
+      if (d === -1) return "-1d";
       if (d === 0) return "hoy";
       if (d > 0) return `+${d}d`;
       return `${d}d`;
