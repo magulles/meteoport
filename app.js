@@ -921,7 +921,7 @@ const yMaxChart = maxHs + 0.8;
   }
 },
 plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin, daySeparatorPlugin]
-
+});   // 👈 ESTO FALTA
 function updateChartCursorOnly() {
   if (!waveChart) return;
   waveChart.options.plugins.verticalCursorPlugin.selectedIndex = selectedHour;
