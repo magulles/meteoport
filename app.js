@@ -754,7 +754,7 @@ const daySeparatorPlugin = {
     // 2) etiquetas de día arriba
     ctx.setLineDash([]);
     ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
+    ctx.textBaseline = "top";
     ctx.font = "600 11px sans-serif";
 
     dayGroups.forEach(group => {
@@ -766,7 +766,7 @@ const daySeparatorPlugin = {
       const isToday = label === "hoy";
 
       ctx.fillStyle = isToday ? "#111827" : "#6b7280";
-      ctx.fillText(label, xMid, chartArea.top - 6);
+      ctx.fillText(label, xMid, chartArea.bottom + 6);
     });
 
     ctx.restore();
@@ -850,12 +850,19 @@ const yMaxChart = maxHs + 0.8;
 }*/
       ]
     },
-options: {
+
+    options: {
   responsive: true,
   maintainAspectRatio: false,
   interaction: {
     mode: "index",
     intersect: false
+  },
+  layout: {
+    padding: {
+      top: 20,
+      bottom: 24
+    }
   },
   plugins: {
     daySeparatorPlugin: {
@@ -892,7 +899,7 @@ options: {
     pdeWaveArrowsPlugin: {
       datasetIndex: 2,
       directions: dirCop,
-      topPaddingPx: 22,
+      topPaddingPx: 18,
       arrowLengthPx: 12,
       arrowHeadPx: 4,
       lineWidth: 1.1
@@ -914,8 +921,6 @@ options: {
   }
 },
 plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin, daySeparatorPlugin]
-  });
-}
 
 function updateChartCursorOnly() {
   if (!waveChart) return;
