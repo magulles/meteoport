@@ -66,12 +66,13 @@ PDE_TOTAL_HOURS = (PAST_DAYS * 24) + PDE_FORECAST_HOURS
 # --- Copernicus olas ---
 COPERNICUS_DATASET_ID_IBI = "cmems_mod_ibi_wav_anfc_0.027deg_PT1H-i"
 COPERNICUS_DATASET_ID_GLO = "cmems_mod_glo_wav_anfc_0.083deg_PT3H-i"
-COPERNICUS_USERNAME = os.environ["COPERNICUS_USERNAME"]
-COPERNICUS_PASSWORD = os.environ["COPERNICUS_PASSWORD"]
-
+#COPERNICUS_USERNAME = os.environ["COPERNICUS_USERNAME"]
+#COPERNICUS_PASSWORD = os.environ["COPERNICUS_PASSWORD"]
+COPERNICUS_USERNAME = os.getenv("COPERNICUS_USERNAME", "magulles2")
+COPERNICUS_PASSWORD = os.getenv("COPERNICUS_PASSWORD", "MiguelCMEMS2017")
 
 COPERNICUS_SEARCH_OFFSETS = [0.0, 0.02, 0.04, 0.06, 0.08]
-MIN_VALID_RATIO = 0.30
+MIN_VALID_RATIO = 0.70
 # Caja aproximada para decidir si un punto cae dentro de IBI
 IBI_BBOX = {
     "lon_min": -20.0,
@@ -115,11 +116,11 @@ DEFAULT_HTTP_HEADERS = {
 RETRYABLE_HTTP_CODES = {500, 502, 503, 504}
 
 # --- Rendimiento / concurrencia ---
-MAX_WORKERS_WIND = int(os.getenv("METEOPORT_MAX_WORKERS_WIND", "4"))
+MAX_WORKERS_WIND = int(os.getenv("METEOPORT_MAX_WORKERS_WIND", "8"))
 MAX_WORKERS_PDE = int(os.getenv("METEOPORT_MAX_WORKERS_PDE", "1"))
 MAX_WORKERS_PORT = int(os.getenv("METEOPORT_MAX_WORKERS_PORT", "1"))
 MAX_WORKERS_TOP_LEVEL = int(os.getenv("METEOPORT_MAX_WORKERS_TOP_LEVEL", "3"))
-MAX_WORKERS_COPERNICUS = int(os.getenv("METEOPORT_MAX_WORKERS_COPERNICUS", "1"))
+MAX_WORKERS_COPERNICUS = int(os.getenv("METEOPORT_MAX_WORKERS_COPERNICUS", "2"))
 
 HTTP_TIMEOUT_CATALOG = int(os.getenv("METEOPORT_HTTP_TIMEOUT_CATALOG", "60"))
 HTTP_TIMEOUT_FILE = int(os.getenv("METEOPORT_HTTP_TIMEOUT_FILE", "120"))
@@ -289,6 +290,7 @@ def classify_points(points: List[Dict]) -> Dict[str, List[Dict]]:
         point_class = classify_point(point)
         point["point_class"] = point_class
         grouped[point_class].append(point)
+        
     return grouped
 
 
@@ -461,7 +463,7 @@ def fetch_copernicus_candidate(dataset_id, req_lon, req_lat, point_id, attempt_i
             tp_v = round_or_none(tp[j], 2)
             di_v = round_or_none(di[j], 2)
 
-            if hs_v is not None or tp_v is not None or di_v is not None:
+            if hs_v is not None:
                 valid_count += 1
 
             forecast.append({
