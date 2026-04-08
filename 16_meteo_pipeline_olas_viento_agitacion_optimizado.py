@@ -86,7 +86,7 @@ OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 # --- OpenWeather api key --- 
 OPENWEATHER_URL = "https://api.openweathermap.org/data/3.0/onecall"
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "bad56ea288fd7b53ae72f0f8d7dc3bbf").strip()
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "").strip()
 
 # --- Puertos del Estado ---
 PDE_REGIONS = {
