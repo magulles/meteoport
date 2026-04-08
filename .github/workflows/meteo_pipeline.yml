@@ -31,6 +31,7 @@ jobs:
         env:
           COPERNICUS_USERNAME: ${{ secrets.COPERNICUS_USERNAME }}
           COPERNICUS_PASSWORD: ${{ secrets.COPERNICUS_PASSWORD }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         run: |
           python 15_meteo_pipeline_olas_viento_agitacion_optimizado.py
           python descarga_obs_global_optimizado.py
