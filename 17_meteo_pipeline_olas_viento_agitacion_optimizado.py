@@ -69,7 +69,7 @@ COPERNICUS_DATASET_ID_GLO = "cmems_mod_glo_wav_anfc_0.083deg_PT3H-i"
 COPERNICUS_USERNAME = os.environ["COPERNICUS_USERNAME"]
 COPERNICUS_PASSWORD = os.environ["COPERNICUS_PASSWORD"]
 
-COPERNICUS_SEARCH_OFFSETS = [0.0, 0.02, 0.04, 0.06, 0.08]
+COPERNICUS_SEARCH_OFFSETS = [0.0, 0.02]
 MIN_VALID_RATIO = 0.70
 # Caja aproximada para decidir si un punto cae dentro de IBI
 IBI_BBOX = {
