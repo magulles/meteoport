@@ -936,7 +936,6 @@ function renderChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      parsing: false,
       interaction: {
         mode: "index",
         intersect: false
