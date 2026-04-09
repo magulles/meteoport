@@ -44,7 +44,7 @@ import xarray as xr
 # =========================
 
 POINTS_FILE = "lonp_latp.txt"
-PDE_OUTPUT_JSON = "olas_pde.json"
+PDE_OUTPUT_JSON = "1_olas_pde.json"
 
 PAST_DAYS = 1
 PDE_FORECAST_DAYS = 3
