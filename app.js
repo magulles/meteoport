@@ -35,7 +35,6 @@ function setupResponsiveFixes() {
 // TOUCH FIX
 document.addEventListener("touchstart", function () {}, { passive: true });
 
-
 // ============================
 // CONFIG
 // ============================
@@ -125,10 +124,10 @@ function getColor(hs) {
 function getHexColorFromHs(hs) {
   if (hs === null || hs === undefined || Number.isNaN(hs)) return "#94a3b8";
 
-  if (hs < THRESHOLDS.greenMax) return "#16a34a";   // verde
-  if (hs < THRESHOLDS.yellowMax) return "#eab308";  // amarillo
-  if (hs < THRESHOLDS.orangeMax) return "#f97316";  // naranja
-  return "#dc2626";                                 // rojo
+  if (hs < THRESHOLDS.greenMax) return "#16a34a";
+  if (hs < THRESHOLDS.yellowMax) return "#eab308";
+  if (hs < THRESHOLDS.orangeMax) return "#f97316";
+  return "#dc2626";
 }
 
 function getRouteStatus(hs) {
@@ -175,7 +174,7 @@ function escapeHtml(text) {
 
 function getOperationalWave(f) {
   const hasPde = f && f.hs_pde !== null && f.hs_pde !== undefined && !Number.isNaN(f.hs_pde);
-  const hasPort = f && f.hs_port !== null && f.hs_port !== undefined && !Number.isNaN(f.hs_port);
+  const hasPort = f && f.hs_puerto !== null && f.hs_puerto !== undefined && !Number.isNaN(f.hs_puerto);
 
   if (hasPde) {
     return {
@@ -188,7 +187,7 @@ function getOperationalWave(f) {
 
   if (hasPort) {
     return {
-      wave: f.hs_port,
+      wave: f.hs_puerto,
       tp: null,
       dir: null,
       source: "Puerto"
@@ -196,13 +195,12 @@ function getOperationalWave(f) {
   }
 
   return {
-    wave: f?.hs ?? null,
-    tp: f?.tp ?? null,
-    dir: f?.di ?? null,
+    wave: f?.hs_cop ?? null,
+    tp: f?.tp_cop ?? null,
+    dir: f?.di_cop ?? null,
     source: "Copernicus"
   };
 }
-
 
 function buildMergedForecast(point) {
   return (point.forecast || []).map((f, i) => {
@@ -215,21 +213,24 @@ function buildMergedForecast(point) {
       tp: op.tp,
       dir: op.dir,
       waveSource: op.source,
+
       wavePde: f.hs_pde ?? null,
-      wavePort: f.hs_port ?? null,
-      waveCopernicus: f.hs ?? null,
-      waveObs: f.hsobs ?? null,
+      wavePort: f.hs_puerto ?? null,
+      waveCopernicus: f.hs_cop ?? null,
+      waveObs: f.hs_obs ?? null,
+
       tpPde: f.tp_pde ?? null,
-      tpCopernicus: f.tp ?? null,
+      tpCopernicus: f.tp_cop ?? null,
+
       dirPde: f.di_pde ?? null,
-      dirCopernicus: f.di ?? null,
-      windSpeed: f.wind_speed_10m_ms ?? null,
-      windDir: f.wind_direction_10m_deg ?? null,
-      windObs: f.wspdobs ?? null
+      dirCopernicus: f.di_cop ?? null,
+
+      windSpeed: f.wspeed_mod ?? null,
+      windDir: f.wsdir_mod ?? null,
+      windObs: f.wspeed_obs ?? null
     };
   });
 }
-
 
 function getForecastLength() {
   if (!locations.length) return 0;
@@ -369,8 +370,8 @@ function initRoutes() {
 // ============================
 
 Promise.all([
-  fetch("./meteo_points_tot.json").then(res => {
-    if (!res.ok) throw new Error(`HTTP ${res.status} cargando meteo_points_tot.json`);
+  fetch("./meteo_points_merged.json").then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status} cargando meteo_points_merged.json`);
     return res.json();
   }),
   fetch("./routes.json").then(res => {
@@ -389,7 +390,7 @@ Promise.all([
     }));
 
     if (!locations.length) {
-      throw new Error("No hay puntos en meteo_points_tot.json");
+      throw new Error("No hay puntos en meteo_points_merged.json");
     }
 
     routes = buildRoutes(routesData);
@@ -438,8 +439,6 @@ function initMarkers() {
   markers = [];
 
   locations.forEach(loc => {
-    const f = loc.forecast[selectedHour];
-    const color = "#374151"; // gris oscuro fijo
     const isObsPoint = loc.name?.toLowerCase().startsWith("boya");
 
     let marker;
@@ -450,12 +449,12 @@ function initMarkers() {
       }).addTo(map);
     } else {
       marker = L.circleMarker(loc.coords, {
-  radius: 2,        // muy limpio
-  color: "#1f2937",
-  fillColor: "#1f2937",
-  fillOpacity: 0.9,
-  weight: 1
-}).addTo(map);
+        radius: 2,
+        color: "#1f2937",
+        fillColor: "#1f2937",
+        fillOpacity: 0.9,
+        weight: 1
+      }).addTo(map);
     }
 
     marker.bindTooltip(loc.name, { direction: "top", offset: [0, -6] });
@@ -473,16 +472,14 @@ function initMarkers() {
 }
 
 function updateMarkers() {
-  markers.forEach(({ marker, loc, isObsPoint }) => {
-    const f = loc.forecast[selectedHour];
-    const color = "#374151"; // gris oscuro fijo
+  markers.forEach(({ marker, isObsPoint }) => {
+    const color = "#374151";
 
     if (!isObsPoint && marker.setStyle) {
       marker.setStyle({ color, fillColor: color });
     }
   });
 }
-
 
 // ============================
 // PANEL
@@ -501,7 +498,7 @@ function renderLocationInfoPanel() {
     return;
   }
 
- const statusColor = getColor(f.wave) === "yellow" ? "#ca8a04" : getColor(f.wave);
+  const statusColor = getColor(f.wave) === "yellow" ? "#ca8a04" : getColor(f.wave);
 
   infoPanel.innerHTML = `
     <h3>${escapeHtml(selectedLocation.name)}</h3>
@@ -519,15 +516,21 @@ function renderRouteInfoPanel() {
   if (!selectedRoute) return;
 
   const summary = calculateRouteSummary(selectedRoute);
-  const missingPoints = selectedRoute.resolvedPoints.filter(p => !p.loc).map(p => p.name);
   const pointsLabel = selectedRoute.resolvedPoints.map(p => p.name).join(" → ");
 
   if (!summary.hasData) {
-    infoPanel.innerHTML = `...`;
+    infoPanel.innerHTML = `
+      <h3>${escapeHtml(selectedRoute.name)}</h3>
+      <p><strong>Salida:</strong> ${formatDateTimeLong(selectedRoute.departure_time)}</p>
+      <p><strong>Llegada:</strong> ${formatDateTimeLong(selectedRoute.arrival_time)}</p>
+      <p><strong>Puntos:</strong> ${escapeHtml(pointsLabel)}</p>
+      <hr style="margin:10px 0;">
+      <p>${escapeHtml(summary.reason)}</p>
+    `;
     return;
   }
 
-  const statusColor = getColor(summary.wave);
+  const routeStatus = getRouteStatus(summary.wave);
 
   infoPanel.innerHTML = `
     <h3>${escapeHtml(selectedRoute.name)}</h3>
@@ -540,7 +543,7 @@ function renderRouteInfoPanel() {
     <p><strong>Dirección asociada:</strong> ${formatNumber(summary.dir)}°</p>
     <p><strong>Ocurre en:</strong> ${escapeHtml(summary.locationName)}</p>
     <p><strong>Hora:</strong> ${formatDateTimeLong(summary.time)}</p>
-    <p><strong>Estado:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
+    <p><strong>Estado:</strong> <span style="color:${routeStatus.color}; font-weight:700;">${routeStatus.label}</span></p>
   `;
 }
 
@@ -588,8 +591,8 @@ const verticalCursorPlugin = {
   }
 };
 
-// ============================ 
-// CHART PLUGIN: PDE WAVE ARROWS 
+// ============================
+// CHART PLUGIN: PDE/COP WAVE ARROWS
 // ============================
 
 const pdeWaveArrowsPlugin = {
@@ -598,7 +601,6 @@ const pdeWaveArrowsPlugin = {
     const datasetIndex = options?.datasetIndex ?? 2;
     const directions = options?.directions ?? [];
     const topPaddingPx = options?.topPaddingPx ?? 10;
-    const arrowYValue = options?.arrowYValue ?? null;
     const arrowLengthPx = options?.arrowLengthPx ?? 14;
     const arrowHeadPx = options?.arrowHeadPx ?? 5;
     const lineWidth = options?.lineWidth ?? 1.4;
@@ -608,19 +610,18 @@ const pdeWaveArrowsPlugin = {
     const dataset = chart.data.datasets?.[datasetIndex];
     const ctx = chart.ctx;
     const chartArea = chart.chartArea;
-    const yScale = chart.scales.y;
 
     if (!meta || !dataset || meta.hidden) return;
     if (!meta.data || !meta.data.length) return;
-    if (!chartArea || !yScale) return;
+    if (!chartArea) return;
 
     ctx.save();
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
     ctx.lineWidth = lineWidth;
 
-  const yFixed = chartArea.top + topPaddingPx;
-    
+    const yFixed = chartArea.top + topPaddingPx;
+
     meta.data.forEach((pointEl, i) => {
       const hsValue = dataset.data[i];
       const dirFrom = directions[i];
@@ -678,169 +679,150 @@ function renderChart() {
   const dirPde = forecast.map(f => f.dirPde);
   const dirCop = forecast.map(f => f.dirCopernicus);
   const windOpenMeteo = forecast.map(f => f.windSpeed ?? null);
+
   if (waveChart) {
     waveChart.destroy();
   }
 
-const daySeparatorPlugin = {
-  id: "daySeparatorPlugin",
-  afterDraw(chart) {
-    const { ctx, chartArea, scales } = chart;
-    const xScale = scales.x;
-    const forecast = chart.config.options?.plugins?.daySeparatorPlugin?.forecast || [];
+  const daySeparatorPlugin = {
+    id: "daySeparatorPlugin",
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      const forecastData = chart.config.options?.plugins?.daySeparatorPlugin?.forecast || [];
 
-    if (!xScale || !forecast.length) return;
+      if (!xScale || !forecastData.length) return;
 
-    // ============================
-    // AGRUPAR POR DÍAS (UTC)
-    // ============================
+      const dayGroups = [];
+      let currentGroup = null;
 
-    const dayGroups = [];
-    let currentGroup = null;
+      for (let i = 0; i < forecastData.length; i++) {
+        const t = forecastData[i]?.time;
+        if (!t) continue;
 
-    for (let i = 0; i < forecast.length; i++) {
-      const t = forecast[i]?.time;
-      if (!t) continue;
+        const d = new Date(t);
+        const dayKey = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
 
-      const d = new Date(t);
-      const dayKey = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
-
-      if (!currentGroup || currentGroup.dayKey !== dayKey) {
-        currentGroup = {
-          dayKey,
-          startIndex: i,
-          endIndex: i,
-          date: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
-        };
-        dayGroups.push(currentGroup);
-      } else {
-        currentGroup.endIndex = i;
+        if (!currentGroup || currentGroup.dayKey !== dayKey) {
+          currentGroup = {
+            dayKey,
+            startIndex: i,
+            endIndex: i,
+            date: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+          };
+          dayGroups.push(currentGroup);
+        } else {
+          currentGroup.endIndex = i;
+        }
       }
+
+      if (!dayGroups.length) return;
+
+      const todayRef = new Date();
+      const todayUtc = new Date(Date.UTC(
+        todayRef.getUTCFullYear(),
+        todayRef.getUTCMonth(),
+        todayRef.getUTCDate()
+      ));
+
+      function diffDays(dateA, dateB) {
+        return Math.round((dateA - dateB) / 86400000);
+      }
+
+      function getDayLabel(dayDate) {
+        const d = diffDays(dayDate, todayUtc);
+        if (d === -1) return "ayer";
+        if (d === 0) return "hoy";
+        if (d > 0) return `+${d}d`;
+        return `${d}d`;
+      }
+
+      function getPixelForTimeBoundary(targetMs) {
+        let i = forecastData.findIndex(f => new Date(f.time).getTime() >= targetMs);
+
+        if (i === -1) return chartArea.right;
+        if (i === 0) return chartArea.left;
+
+        const t1 = new Date(forecastData[i - 1].time).getTime();
+        const t2 = new Date(forecastData[i].time).getTime();
+        const x1 = xScale.getPixelForValue(i - 1);
+        const x2 = xScale.getPixelForValue(i);
+
+        const ratio = (targetMs - t1) / (t2 - t1);
+        return x1 + ratio * (x2 - x1);
+      }
+
+      ctx.save();
+
+      const now = new Date();
+
+      const startToday = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0, 0, 0
+      );
+
+      const startTomorrow = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+        0, 0, 0
+      );
+
+      const leftEdge = getPixelForTimeBoundary(startToday);
+      const rightEdge = getPixelForTimeBoundary(startTomorrow);
+
+      ctx.fillStyle = "rgba(37, 99, 235, 0.05)";
+      ctx.fillRect(
+        leftEdge,
+        chartArea.top,
+        rightEdge - leftEdge,
+        chartArea.bottom - chartArea.top
+      );
+
+      ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
+      ctx.lineWidth = 1.1;
+      ctx.setLineDash([4, 4]);
+
+      for (let i = 1; i < dayGroups.length; i++) {
+        const x = xScale.getPixelForValue(dayGroups[i].startIndex);
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.stroke();
+      }
+
+      ctx.setLineDash([]);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.font = "600 11px sans-serif";
+
+      dayGroups.forEach(group => {
+        const x1 = xScale.getPixelForValue(group.startIndex);
+        const x2 = xScale.getPixelForValue(group.endIndex);
+        const xMid = (x1 + x2) / 2;
+
+        const label = getDayLabel(group.date);
+
+        ctx.fillStyle = label === "hoy" ? "#111827" : "#6b7280";
+        ctx.fillText(label, xMid, chartArea.bottom + 6);
+      });
+
+      ctx.restore();
     }
+  };
 
-    if (!dayGroups.length) return;
+  const allHs = [
+    ...hsPort,
+    ...hsPde,
+    ...hsCop,
+    ...hsObs
+  ].filter(v => v != null && !Number.isNaN(v));
 
-    // ============================
-    // FUNCIONES AUX
-    // ============================
+  const maxHs = allHs.length ? Math.max(...allHs) : 1;
+  const yMaxChart = maxHs + 0.8;
 
-    const todayRef = new Date();
-    const todayUtc = new Date(Date.UTC(
-      todayRef.getUTCFullYear(),
-      todayRef.getUTCMonth(),
-      todayRef.getUTCDate()
-    ));
-
-    function diffDays(dateA, dateB) {
-      return Math.round((dateA - dateB) / 86400000);
-    }
-
-    function getDayLabel(dayDate) {
-      const d = diffDays(dayDate, todayUtc);
-      if (d === -1) return "ayer";
-      if (d === 0) return "hoy";
-      if (d > 0) return `+${d}d`;
-      return `${d}d`;
-    }
-
-    function getPixelForTimeBoundary(targetMs) {
-      let i = forecast.findIndex(f => new Date(f.time).getTime() >= targetMs);
-
-      if (i === -1) return chartArea.right;
-      if (i === 0) return chartArea.left;
-
-      const t1 = new Date(forecast[i - 1].time).getTime();
-      const t2 = new Date(forecast[i].time).getTime();
-      const x1 = xScale.getPixelForValue(i - 1);
-      const x2 = xScale.getPixelForValue(i);
-
-      const ratio = (targetMs - t1) / (t2 - t1);
-      return x1 + ratio * (x2 - x1);
-    }
-
-    ctx.save();
-
-    // ============================
-    // 0) SOMBREADO DE HOY (UTC)
-    // ============================
-
-    const now = new Date();
-
-    const startToday = Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      0, 0, 0
-    );
-
-    const startTomorrow = Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate() + 1,
-      0, 0, 0
-    );
-
-    const leftEdge = getPixelForTimeBoundary(startToday);
-    const rightEdge = getPixelForTimeBoundary(startTomorrow);
-
-    ctx.fillStyle = "rgba(37, 99, 235, 0.05)";
-    ctx.fillRect(
-      leftEdge,
-      chartArea.top,
-      rightEdge - leftEdge,
-      chartArea.bottom - chartArea.top
-    );
-
-    // ============================
-    // 1) SEPARADORES
-    // ============================
-
-    ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
-    ctx.lineWidth = 1.1;
-    ctx.setLineDash([4, 4]);
-
-    for (let i = 1; i < dayGroups.length; i++) {
-      const x = xScale.getPixelForValue(dayGroups[i].startIndex);
-      ctx.beginPath();
-      ctx.moveTo(x, chartArea.top);
-      ctx.lineTo(x, chartArea.bottom);
-      ctx.stroke();
-    }
-
-    // ============================
-    // 2) ETIQUETAS ABAJO
-    // ============================
-
-    ctx.setLineDash([]);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.font = "600 11px sans-serif";
-
-    dayGroups.forEach(group => {
-      const x1 = xScale.getPixelForValue(group.startIndex);
-      const x2 = xScale.getPixelForValue(group.endIndex);
-      const xMid = (x1 + x2) / 2;
-
-      const label = getDayLabel(group.date);
-
-      ctx.fillStyle = label === "hoy" ? "#111827" : "#6b7280";
-      ctx.fillText(label, xMid, chartArea.bottom + 6);
-    });
-
-    ctx.restore();
-  }
-};
-
-const allHs = [
-  ...hsPort,
-  ...hsPde,
-  ...hsCop,
-  ...hsObs
-].filter(v => v != null && !Number.isNaN(v));
-
-const maxHs = Math.max(...allHs);
-const yMaxChart = maxHs + 0.8;
-  
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
@@ -880,107 +862,111 @@ const yMaxChart = maxHs + 0.8;
           tension: 0.25,
           spanGaps: true
         },
-{
-  label: "Obs",
-  data: hsObs,
-  borderColor: "rgba(0,0,0,0.6)",   
-  backgroundColor: "rgba(0,0,0,0.3)",
-  borderWidth: 1.2,                 
-  pointRadius: 1.5,                   
-  pointHoverRadius: 3,
-  tension: 0.2,
-  borderDash: [],              
-  spanGaps: true,
-  order:-10
-},
-/*{
-  label: "Viento",
-  data: windOpenMeteo,
-  yAxisID: "yWind",
-  borderColor: "#92400e",
-  backgroundColor: "transparent",
-  borderWidth: 2,
-  pointRadius: 0,
-  pointHoverRadius: 4,
-  tension: 0.25,
-  spanGaps: true,
-  borderDash: [6, 4]
-}*/
+        {
+          label: "Obs",
+          data: hsObs,
+          borderColor: "rgba(0,0,0,0.6)",
+          backgroundColor: "rgba(0,0,0,0.3)",
+          borderWidth: 1.2,
+          pointRadius: 1.5,
+          pointHoverRadius: 3,
+          tension: 0.2,
+          borderDash: [],
+          spanGaps: true,
+          order: -10
+        }
+        /*
+        {
+          label: "Viento",
+          data: windOpenMeteo,
+          yAxisID: "yWind",
+          borderColor: "#92400e",
+          backgroundColor: "transparent",
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          tension: 0.25,
+          spanGaps: true,
+          borderDash: [6, 4]
+        }
+        */
       ]
     },
 
     options: {
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: {
-    mode: "index",
-    intersect: false
-  },
-  layout: {
-    padding: {
-      top: 20,
-      bottom: 24
-    }
-  },
-  plugins: {
-    daySeparatorPlugin: {
-      forecast
-    },
-    tooltip: {
-      callbacks: {
-        title: items => {
-          if (!items.length) return "";
-          const idx = items[0].dataIndex;
-          return forecast[idx]?.time || "";
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
+      layout: {
+        padding: {
+          top: 20,
+          bottom: 24
+        }
+      },
+      plugins: {
+        daySeparatorPlugin: {
+          forecast
         },
-        label: () => "",
-        afterBody: items => {
-          if (!items.length) return [];
+        tooltip: {
+          callbacks: {
+            title: items => {
+              if (!items.length) return "";
+              const idx = items[0].dataIndex;
+              return forecast[idx]?.time || "";
+            },
+            label: () => "",
+            afterBody: items => {
+              if (!items.length) return [];
 
-          const idx = items[0].dataIndex;
-          const f = forecast[idx];
-          return [
-            `Hs Puerto: ${formatNumber(f.wavePort)} m`,
-            `Hs PdE: ${formatNumber(f.wavePde)} m`,
-            `Tp PdE: ${formatNumber(f.tpPde)} s`,
-            `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
-            `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`,
-            `Hs Obs: ${formatNumber(f.waveObs)} m`,
-            `Viento: ${formatNumber(f.windSpeed)} m/s`
-          ];
+              const idx = items[0].dataIndex;
+              const f = forecast[idx];
+              return [
+                `Hs Puerto: ${formatNumber(f.wavePort)} m`,
+                `Hs PdE: ${formatNumber(f.wavePde)} m`,
+                `Tp PdE: ${formatNumber(f.tpPde)} s`,
+                `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
+                `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`,
+                `Hs Obs: ${formatNumber(f.waveObs)} m`,
+                `Viento mod: ${formatNumber(f.windSpeed)} m/s`,
+                `Dir mod: ${formatNumber(f.windDir, 0)}°`,
+                `Viento obs: ${formatNumber(f.windObs)} m/s`
+              ];
+            }
+          }
+        },
+        verticalCursorPlugin: {
+          selectedIndex: selectedHour
+        },
+        pdeWaveArrowsPlugin: {
+          datasetIndex: 2,
+          directions: dirCop,
+          topPaddingPx: 18,
+          arrowLengthPx: 12,
+          arrowHeadPx: 4,
+          lineWidth: 1.1
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: "#eef2f7" }
+        },
+        y: {
+          beginAtZero: true,
+          max: yMaxChart,
+          title: {
+            display: true,
+            text: "Hs (m)"
+          },
+          grid: { color: "#e5e7eb" }
         }
       }
     },
-    verticalCursorPlugin: {
-      selectedIndex: selectedHour
-    },
-    pdeWaveArrowsPlugin: {
-      datasetIndex: 2,
-      directions: dirCop,
-      topPaddingPx: 18,
-      arrowLengthPx: 12,
-      arrowHeadPx: 4,
-      lineWidth: 1.1
-    }
-  }, // 👈 ESTA LLAVE ES CLAVE
-  scales: {
-    x: {
-      grid: { color: "#eef2f7" }
-    },
-    y: {
-      beginAtZero: true,
-      max: yMaxChart,
-      title: {
-        display: true,
-        text: "Hs (m)"
-      },
-      grid: { color: "#e5e7eb" }
-    }
-  }
-},
-plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin, daySeparatorPlugin]
-});   // 👈 ESTO FALTA
-}      // cierra renderChart()
+    plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin, daySeparatorPlugin]
+  });
+}
 
 function updateChartCursorOnly() {
   if (!waveChart) return;
@@ -998,6 +984,7 @@ hourSlider.addEventListener("input", e => {
   updateMarkers();
   updateInfoPanel();
   updateHourLabel();
+  updateChartCursorOnly();
 });
 
 function updateHourLabel() {
