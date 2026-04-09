@@ -35,6 +35,7 @@ function setupResponsiveFixes() {
 // TOUCH FIX
 document.addEventListener("touchstart", function () {}, { passive: true });
 
+
 // ============================
 // CONFIG
 // ============================
@@ -66,6 +67,8 @@ const waveChartCanvas = document.getElementById("wave-chart");
 // ============================
 
 const map = L.map("map").setView([39.5, 0], 5);
+window.map = map;
+
 map.createPane("routesPane");
 map.getPane("routesPane").style.zIndex = 350;
 
@@ -172,33 +175,59 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;");
 }
 
+function isValidNumber(v) {
+  return v !== null && v !== undefined && !Number.isNaN(Number(v));
+}
+
+function getPointCoords(point) {
+  const lat = isValidNumber(point.lat) ? Number(point.lat) : (
+    isValidNumber(point.requested_lat) ? Number(point.requested_lat) : null
+  );
+  const lon = isValidNumber(point.lon) ? Number(point.lon) : (
+    isValidNumber(point.requested_lon) ? Number(point.requested_lon) : null
+  );
+
+  if (!isValidNumber(lat) || !isValidNumber(lon)) return null;
+  return [lat, lon];
+}
+
 function getOperationalWave(f) {
-  const hasPde = f && f.hs_pde !== null && f.hs_pde !== undefined && !Number.isNaN(f.hs_pde);
-  const hasPort = f && f.hs_puerto !== null && f.hs_puerto !== undefined && !Number.isNaN(f.hs_puerto);
+  const hasPde = isValidNumber(f?.hs_pde);
+  const hasPort = isValidNumber(f?.hs_puerto);
+  const hasCop = isValidNumber(f?.hs_cop);
 
   if (hasPde) {
     return {
-      wave: f.hs_pde,
-      tp: f.tp_pde,
-      dir: f.di_pde,
+      wave: Number(f.hs_pde),
+      tp: isValidNumber(f.tp_pde) ? Number(f.tp_pde) : null,
+      dir: isValidNumber(f.di_pde) ? Number(f.di_pde) : null,
       source: "PdE"
     };
   }
 
   if (hasPort) {
     return {
-      wave: f.hs_puerto,
+      wave: Number(f.hs_puerto),
       tp: null,
       dir: null,
       source: "Puerto"
     };
   }
 
+  if (hasCop) {
+    return {
+      wave: Number(f.hs_cop),
+      tp: isValidNumber(f.tp_cop) ? Number(f.tp_cop) : null,
+      dir: isValidNumber(f.di_cop) ? Number(f.di_cop) : null,
+      source: "Copernicus"
+    };
+  }
+
   return {
-    wave: f?.hs_cop ?? null,
-    tp: f?.tp_cop ?? null,
-    dir: f?.di_cop ?? null,
-    source: "Copernicus"
+    wave: null,
+    tp: null,
+    dir: null,
+    source: "Sin datos"
   };
 }
 
@@ -214,20 +243,21 @@ function buildMergedForecast(point) {
       dir: op.dir,
       waveSource: op.source,
 
-      wavePde: f.hs_pde ?? null,
-      wavePort: f.hs_puerto ?? null,
-      waveCopernicus: f.hs_cop ?? null,
-      waveObs: f.hs_obs ?? null,
+      wavePde: isValidNumber(f.hs_pde) ? Number(f.hs_pde) : null,
+      tpPde: isValidNumber(f.tp_pde) ? Number(f.tp_pde) : null,
+      dirPde: isValidNumber(f.di_pde) ? Number(f.di_pde) : null,
 
-      tpPde: f.tp_pde ?? null,
-      tpCopernicus: f.tp_cop ?? null,
+      waveCopernicus: isValidNumber(f.hs_cop) ? Number(f.hs_cop) : null,
+      tpCopernicus: isValidNumber(f.tp_cop) ? Number(f.tp_cop) : null,
+      dirCopernicus: isValidNumber(f.di_cop) ? Number(f.di_cop) : null,
 
-      dirPde: f.di_pde ?? null,
-      dirCopernicus: f.di_cop ?? null,
+      wavePort: isValidNumber(f.hs_puerto) ? Number(f.hs_puerto) : null,
 
-      windSpeed: f.wspeed_mod ?? null,
-      windDir: f.wsdir_mod ?? null,
-      windObs: f.wspeed_obs ?? null
+      waveObs: isValidNumber(f.hs_obs) ? Number(f.hs_obs) : null,
+      windObs: isValidNumber(f.wspeed_obs) ? Number(f.wspeed_obs) : null,
+
+      windSpeed: isValidNumber(f.wspeed_mod) ? Number(f.wspeed_mod) : null,
+      windDir: isValidNumber(f.wsdir_mod) ? Number(f.wsdir_mod) : null
     };
   });
 }
@@ -257,7 +287,7 @@ function buildRoutes(rawRoutes) {
       });
 
     const validLocations = resolvedPoints
-      .filter(p => p.loc)
+      .filter(p => p.loc && Array.isArray(p.loc.coords))
       .map(p => p.loc);
 
     return {
@@ -291,7 +321,7 @@ function calculateRouteSummary(route) {
 
       recordsInWindow += 1;
 
-      if (f.wave === null || f.wave === undefined || Number.isNaN(f.wave)) return;
+      if (!isValidNumber(f.wave)) return;
 
       if (!best || f.wave > best.wave) {
         best = {
@@ -341,14 +371,19 @@ function initRoutes() {
   routeLayers = [];
 
   routes.forEach(route => {
-    const latlngs = route.locations.map(loc => loc.coords);
+    const latlngs = route.locations
+      .map(loc => loc.coords)
+      .filter(coords => Array.isArray(coords) && coords.length === 2);
+
     if (latlngs.length < 2) return;
 
     const polyline = L.polyline(latlngs, {
       color: getRouteDisplayColor(route),
       weight: 3,
-      opacity: 0.75
+      opacity: 0.75,
+      pane: "routesPane"
     }).addTo(map);
+
     polyline.bringToBack();
     polyline.bindTooltip(route.name, { direction: "top", sticky: true });
 
@@ -380,17 +415,29 @@ Promise.all([
   })
 ])
   .then(([meteoData, routesData]) => {
-    const rawPoints = Array.isArray(meteoData) ? meteoData : meteoData.points;
+    const rawPoints = Array.isArray(meteoData) ? meteoData : (meteoData.points || []);
 
-    locations = rawPoints.map(point => ({
-      name: point.name,
-      coords: [point.lat, point.lon],
-      thresholds: { ...THRESHOLDS },
-      forecast: buildMergedForecast(point)
-    }));
+    locations = rawPoints
+      .map(point => {
+        const coords = getPointCoords(point);
+        if (!coords) return null;
+
+        return {
+          pointId: point.point_id,
+          name: point.name,
+          coords,
+          thresholds: { ...THRESHOLDS },
+          forecast: buildMergedForecast(point),
+          lon: isValidNumber(point.lon) ? Number(point.lon) : null,
+          lat: isValidNumber(point.lat) ? Number(point.lat) : null,
+          requestedLon: isValidNumber(point.requested_lon) ? Number(point.requested_lon) : null,
+          requestedLat: isValidNumber(point.requested_lat) ? Number(point.requested_lat) : null
+        };
+      })
+      .filter(Boolean);
 
     if (!locations.length) {
-      throw new Error("No hay puntos en meteo_points_merged.json");
+      throw new Error("No hay puntos válidos en meteo_points_merged.json");
     }
 
     routes = buildRoutes(routesData);
@@ -402,6 +449,7 @@ Promise.all([
     initMarkers();
     initRoutes();
     updateHourLabel();
+    updateInfoPanel();
   })
   .catch(err => {
     console.error(err);
@@ -498,7 +546,7 @@ function renderLocationInfoPanel() {
     return;
   }
 
-  const statusColor = getColor(f.wave) === "yellow" ? "#ca8a04" : getColor(f.wave);
+  const status = getRouteStatus(f.wave);
 
   infoPanel.innerHTML = `
     <h3>${escapeHtml(selectedLocation.name)}</h3>
@@ -506,9 +554,11 @@ function renderLocationInfoPanel() {
     <p><strong>Hs:</strong> ${formatNumber(f.wave)} m (${escapeHtml(f.waveSource)})</p>
     <p><strong>Tp:</strong> ${formatNumber(f.tp)} s</p>
     <p><strong>Wave direction:</strong> ${formatNumber(f.dir)}°</p>
-    <p><strong>Wind:</strong> ${formatNumber(f.windSpeed)} m/s</p>
-    <p><strong>Wind direction:</strong> ${formatNumber(f.windDir)}°</p>
-    <p><strong>Status:</strong> <span style="color:${statusColor}; font-weight:700;">${statusColor.toUpperCase()}</span></p>
+    <p><strong>Wind model:</strong> ${formatNumber(f.windSpeed)} m/s</p>
+    <p><strong>Wind dir model:</strong> ${formatNumber(f.windDir)}°</p>
+    <p><strong>Hs obs:</strong> ${formatNumber(f.waveObs)} m</p>
+    <p><strong>Wind obs:</strong> ${formatNumber(f.windObs)} m/s</p>
+    <p><strong>Status:</strong> <span style="color:${status.color}; font-weight:700;">${escapeHtml(status.label)}</span></p>
   `;
 }
 
@@ -530,7 +580,7 @@ function renderRouteInfoPanel() {
     return;
   }
 
-  const routeStatus = getRouteStatus(summary.wave);
+  const status = getRouteStatus(summary.wave);
 
   infoPanel.innerHTML = `
     <h3>${escapeHtml(selectedRoute.name)}</h3>
@@ -543,7 +593,7 @@ function renderRouteInfoPanel() {
     <p><strong>Dirección asociada:</strong> ${formatNumber(summary.dir)}°</p>
     <p><strong>Ocurre en:</strong> ${escapeHtml(summary.locationName)}</p>
     <p><strong>Hora:</strong> ${formatDateTimeLong(summary.time)}</p>
-    <p><strong>Estado:</strong> <span style="color:${routeStatus.color}; font-weight:700;">${routeStatus.label}</span></p>
+    <p><strong>Estado:</strong> <span style="color:${status.color}; font-weight:700;">${escapeHtml(status.label)}</span></p>
   `;
 }
 
@@ -592,7 +642,7 @@ const verticalCursorPlugin = {
 };
 
 // ============================
-// CHART PLUGIN: PDE/COP WAVE ARROWS
+// CHART PLUGIN: WAVE ARROWS
 // ============================
 
 const pdeWaveArrowsPlugin = {
@@ -610,10 +660,11 @@ const pdeWaveArrowsPlugin = {
     const dataset = chart.data.datasets?.[datasetIndex];
     const ctx = chart.ctx;
     const chartArea = chart.chartArea;
+    const yScale = chart.scales.y;
 
     if (!meta || !dataset || meta.hidden) return;
     if (!meta.data || !meta.data.length) return;
-    if (!chartArea) return;
+    if (!chartArea || !yScale) return;
 
     ctx.save();
     ctx.strokeStyle = color;
@@ -672,13 +723,14 @@ function renderChart() {
 
   const forecast = selectedLocation.forecast;
   const labels = forecast.map(f => formatTimeLabel(f.time));
+
   const hsPort = forecast.map(f => f.wavePort);
   const hsPde = forecast.map(f => f.wavePde);
   const hsCop = forecast.map(f => f.waveCopernicus);
   const hsObs = forecast.map(f => f.waveObs);
+
   const dirPde = forecast.map(f => f.dirPde);
   const dirCop = forecast.map(f => f.dirCopernicus);
-  const windOpenMeteo = forecast.map(f => f.windSpeed ?? null);
 
   if (waveChart) {
     waveChart.destroy();
@@ -689,15 +741,15 @@ function renderChart() {
     afterDraw(chart) {
       const { ctx, chartArea, scales } = chart;
       const xScale = scales.x;
-      const forecastData = chart.config.options?.plugins?.daySeparatorPlugin?.forecast || [];
+      const forecast = chart.config.options?.plugins?.daySeparatorPlugin?.forecast || [];
 
-      if (!xScale || !forecastData.length) return;
+      if (!xScale || !forecast.length) return;
 
       const dayGroups = [];
       let currentGroup = null;
 
-      for (let i = 0; i < forecastData.length; i++) {
-        const t = forecastData[i]?.time;
+      for (let i = 0; i < forecast.length; i++) {
+        const t = forecast[i]?.time;
         if (!t) continue;
 
         const d = new Date(t);
@@ -738,13 +790,13 @@ function renderChart() {
       }
 
       function getPixelForTimeBoundary(targetMs) {
-        let i = forecastData.findIndex(f => new Date(f.time).getTime() >= targetMs);
+        let i = forecast.findIndex(f => new Date(f.time).getTime() >= targetMs);
 
         if (i === -1) return chartArea.right;
         if (i === 0) return chartArea.left;
 
-        const t1 = new Date(forecastData[i - 1].time).getTime();
-        const t2 = new Date(forecastData[i].time).getTime();
+        const t1 = new Date(forecast[i - 1].time).getTime();
+        const t2 = new Date(forecast[i].time).getTime();
         const x1 = xScale.getPixelForValue(i - 1);
         const x2 = xScale.getPixelForValue(i);
 
@@ -820,7 +872,7 @@ function renderChart() {
     ...hsObs
   ].filter(v => v != null && !Number.isNaN(v));
 
-  const maxHs = allHs.length ? Math.max(...allHs) : 1;
+  const maxHs = allHs.length ? Math.max(...allHs) : 2;
   const yMaxChart = maxHs + 0.8;
 
   waveChart = new Chart(waveChartCanvas, {
@@ -875,24 +927,8 @@ function renderChart() {
           spanGaps: true,
           order: -10
         }
-        /*
-        {
-          label: "Viento",
-          data: windOpenMeteo,
-          yAxisID: "yWind",
-          borderColor: "#92400e",
-          backgroundColor: "transparent",
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          tension: 0.25,
-          spanGaps: true,
-          borderDash: [6, 4]
-        }
-        */
       ]
     },
-
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -923,16 +959,19 @@ function renderChart() {
 
               const idx = items[0].dataIndex;
               const f = forecast[idx];
+
               return [
                 `Hs Puerto: ${formatNumber(f.wavePort)} m`,
                 `Hs PdE: ${formatNumber(f.wavePde)} m`,
                 `Tp PdE: ${formatNumber(f.tpPde)} s`,
                 `Di PdE: ${formatNumber(f.dirPde, 0)}°`,
                 `Hs Copernicus: ${formatNumber(f.waveCopernicus)} m`,
+                `Tp Copernicus: ${formatNumber(f.tpCopernicus)} s`,
+                `Di Copernicus: ${formatNumber(f.dirCopernicus, 0)}°`,
                 `Hs Obs: ${formatNumber(f.waveObs)} m`,
-                `Viento mod: ${formatNumber(f.windSpeed)} m/s`,
-                `Dir mod: ${formatNumber(f.windDir, 0)}°`,
-                `Viento obs: ${formatNumber(f.windObs)} m/s`
+                `Wind obs: ${formatNumber(f.windObs)} m/s`,
+                `Wind model: ${formatNumber(f.windSpeed)} m/s`,
+                `Wind dir model: ${formatNumber(f.windDir, 0)}°`
               ];
             }
           }
@@ -966,6 +1005,8 @@ function renderChart() {
     },
     plugins: [verticalCursorPlugin, pdeWaveArrowsPlugin, daySeparatorPlugin]
   });
+
+  window.chart = waveChart;
 }
 
 function updateChartCursorOnly() {
@@ -982,6 +1023,7 @@ hourSlider.addEventListener("input", e => {
   selectedHour = parseInt(e.target.value, 10);
 
   updateMarkers();
+  updateRouteStyles();
   updateInfoPanel();
   updateHourLabel();
   updateChartCursorOnly();
