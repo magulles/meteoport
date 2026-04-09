@@ -728,7 +728,31 @@ function renderChart() {
   if (!selectedLocation || !waveChartCanvas) return;
 
   const forecast = selectedLocation.forecast;
+const firstTimeMs = forecast.length ? new Date(forecast[0].time).getTime() : null;
+const lastTimeMs = forecast.length ? new Date(forecast[forecast.length - 1].time).getTime() : null;
 
+let xAxisMin = null;
+let xAxisMax = null;
+
+if (firstTimeMs !== null && lastTimeMs !== null) {
+  const firstDate = new Date(firstTimeMs);
+  const lastDate = new Date(lastTimeMs);
+
+  xAxisMin = Date.UTC(
+    firstDate.getUTCFullYear(),
+    firstDate.getUTCMonth(),
+    firstDate.getUTCDate(),
+    0, 0, 0, 0
+  );
+
+  xAxisMax = Date.UTC(
+    lastDate.getUTCFullYear(),
+    lastDate.getUTCMonth(),
+    lastDate.getUTCDate() + 1,
+    0, 0, 0, 0
+  );
+}
+  
   const hsPort = forecast.map(f => ({ x: f.time, y: f.wavePort }));
   const hsPde = forecast.map(f => ({ x: f.time, y: f.wavePde }));
   const hsCop = forecast.map(f => ({ x: f.time, y: f.waveCopernicus }));
@@ -1022,22 +1046,27 @@ function renderChart() {
       },
       scales: {
         x: {
-          type: "time",
-          time: {
-            unit: "hour",
-            tooltipFormat: "yyyy-MM-dd HH:mm",
-            displayFormats: {
-              hour: "dd-MMM-HH'h'"
-            }
-          },
-          ticks: {
-            maxRotation: 55,
-            minRotation: 55,
-            autoSkip: true,
-            maxTicksLimit: 30
-          },
-          grid: { color: "#eef2f7" }
-        },
+  type: "time",
+min: xAxisMin,
+max: xAxisMax,
+  time: {
+    unit: "hour",
+    stepSize: 3,
+    round: "hour",
+    tooltipFormat: "yyyy-MM-dd HH:mm",
+    displayFormats: {
+      hour: "dd-MMM-HH'h'"
+    }
+  },
+  ticks: {
+    source: "auto",
+    stepSize: 3,
+    maxRotation: 55,
+    minRotation: 55,
+    autoSkip: false
+  },
+  grid: { color: "#eef2f7" }
+},
         y: {
           beginAtZero: true,
           max: yMaxChart,
