@@ -61,6 +61,7 @@ const infoPanel = document.getElementById("info-panel");
 const hourSlider = document.getElementById("hour-slider");
 const hourLabel = document.getElementById("hour-label");
 const waveChartCanvas = document.getElementById("wave-chart");
+const chartTitle = document.getElementById("chart-title");
 
 // ============================
 // MAPA
@@ -726,6 +727,11 @@ const pdeWaveArrowsPlugin = {
 
 function renderChart() {
   if (!selectedLocation || !waveChartCanvas) return;
+   if (chartTitle) {
+    chartTitle.textContent = selectedLocation?.name
+      ? selectedLocation.name
+      : "Marine forecast";
+  }
 
   const forecast = selectedLocation.forecast;
 const firstTimeMs = forecast.length ? new Date(forecast[0].time).getTime() : null;
