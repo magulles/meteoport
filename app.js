@@ -478,10 +478,6 @@ function createObsIcon() {
   });
 }
 
-// ============================
-// MARKERS
-// ============================
-
 function initMarkers() {
   markers.forEach(({ marker }) => map.removeLayer(marker));
   markers = [];
@@ -623,9 +619,14 @@ const verticalCursorPlugin = {
     const yScale = chart.scales.y;
 
     if (!xScale || !yScale) return;
-    if (selectedIndex < 0 || selectedIndex >= chart.data.labels.length) return;
 
-    const x = xScale.getPixelForValue(selectedIndex);
+    const firstDataset = chart.data.datasets?.[0]?.data || [];
+    if (selectedIndex < 0 || selectedIndex >= firstDataset.length) return;
+
+    const selectedPoint = firstDataset[selectedIndex];
+    if (!selectedPoint?.x) return;
+
+    const x = xScale.getPixelForValue(selectedPoint.x);
     const topY = chart.chartArea.top;
     const bottomY = chart.chartArea.bottom;
     const ctx = chart.ctx;
@@ -655,6 +656,7 @@ const pdeWaveArrowsPlugin = {
     const arrowHeadPx = options?.arrowHeadPx ?? 5;
     const lineWidth = options?.lineWidth ?? 1.4;
     const color = options?.color ?? "#4b5563";
+    const minPixelGap = options?.minPixelGap ?? 18;
 
     const meta = chart.getDatasetMeta(datasetIndex);
     const dataset = chart.data.datasets?.[datasetIndex];
@@ -672,9 +674,10 @@ const pdeWaveArrowsPlugin = {
     ctx.lineWidth = lineWidth;
 
     const yFixed = chartArea.top + topPaddingPx;
+    let lastDrawnX = null;
 
     meta.data.forEach((pointEl, i) => {
-      const hsValue = dataset.data[i];
+      const hsValue = dataset.data?.[i]?.y ?? null;
       const dirFrom = directions[i];
 
       if (hsValue === null || hsValue === undefined || Number.isNaN(hsValue)) return;
@@ -682,6 +685,9 @@ const pdeWaveArrowsPlugin = {
 
       const x = pointEl.x;
       const y = yFixed;
+
+      if (lastDrawnX !== null && Math.abs(x - lastDrawnX) < minPixelGap) return;
+      lastDrawnX = x;
 
       const arrowBearing = (dirFrom + 180) % 360;
       const rad = arrowBearing * Math.PI / 180;
@@ -722,10 +728,12 @@ function renderChart() {
   if (!selectedLocation || !waveChartCanvas) return;
 
   const forecast = selectedLocation.forecast;
+
   const hsPort = forecast.map(f => ({ x: f.time, y: f.wavePort }));
   const hsPde = forecast.map(f => ({ x: f.time, y: f.wavePde }));
   const hsCop = forecast.map(f => ({ x: f.time, y: f.waveCopernicus }));
   const hsObs = forecast.map(f => ({ x: f.time, y: f.waveObs }));
+
   const dirPde = forecast.map(f => f.dirPde);
   const dirCop = forecast.map(f => f.dirCopernicus);
 
@@ -794,8 +802,8 @@ function renderChart() {
 
         const t1 = new Date(forecast[i - 1].time).getTime();
         const t2 = new Date(forecast[i].time).getTime();
-        const x1 = xScale.getPixelForValue(i - 1);
-        const x2 = xScale.getPixelForValue(i);
+        const x1 = xScale.getPixelForValue(forecast[i - 1].time);
+        const x2 = xScale.getPixelForValue(forecast[i].time);
 
         const ratio = (targetMs - t1) / (t2 - t1);
         return x1 + ratio * (x2 - x1);
@@ -835,7 +843,7 @@ function renderChart() {
       ctx.setLineDash([4, 4]);
 
       for (let i = 1; i < dayGroups.length; i++) {
-        const x = xScale.getPixelForValue(dayGroups[i].startIndex);
+        const x = xScale.getPixelForValue(forecast[dayGroups[i].startIndex].time);
         ctx.beginPath();
         ctx.moveTo(x, chartArea.top);
         ctx.lineTo(x, chartArea.bottom);
@@ -848,8 +856,8 @@ function renderChart() {
       ctx.font = "600 11px sans-serif";
 
       dayGroups.forEach(group => {
-        const x1 = xScale.getPixelForValue(group.startIndex);
-        const x2 = xScale.getPixelForValue(group.endIndex);
+        const x1 = xScale.getPixelForValue(forecast[group.startIndex].time);
+        const x2 = xScale.getPixelForValue(forecast[group.endIndex].time);
         const xMid = (x1 + x2) / 2;
 
         const label = getDayLabel(group.date);
@@ -863,11 +871,11 @@ function renderChart() {
   };
 
   const allHs = [
-  ...hsPort.map(p => p.y),
-  ...hsPde.map(p => p.y),
-  ...hsCop.map(p => p.y),
-  ...hsObs.map(p => p.y)
-].filter(v => v != null && !Number.isNaN(v));
+    ...hsPort.map(p => p.y),
+    ...hsPde.map(p => p.y),
+    ...hsCop.map(p => p.y),
+    ...hsObs.map(p => p.y)
+  ].filter(v => v != null && !Number.isNaN(v));
 
   const maxHs = allHs.length ? Math.max(...allHs) : 2;
   const yMaxChart = maxHs + 0.8;
@@ -875,7 +883,6 @@ function renderChart() {
   waveChart = new Chart(waveChartCanvas, {
     type: "line",
     data: {
-      labels,
       datasets: [
         {
           label: "Puerto",
@@ -929,6 +936,7 @@ function renderChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      parsing: false,
       interaction: {
         mode: "index",
         intersect: false
@@ -982,11 +990,26 @@ function renderChart() {
           topPaddingPx: 18,
           arrowLengthPx: 12,
           arrowHeadPx: 4,
-          lineWidth: 1.1
+          lineWidth: 1.1,
+          minPixelGap: 18
         }
       },
       scales: {
         x: {
+          type: "time",
+          time: {
+            unit: "hour",
+            tooltipFormat: "yyyy-MM-dd HH:mm",
+            displayFormats: {
+              hour: "dd-MMM-HH'h'"
+            }
+          },
+          ticks: {
+            maxRotation: 55,
+            minRotation: 55,
+            autoSkip: true,
+            maxTicksLimit: 30
+          },
           grid: { color: "#eef2f7" }
         },
         y: {
