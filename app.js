@@ -620,13 +620,13 @@ const verticalCursorPlugin = {
 
     if (!xScale || !yScale) return;
 
-    const firstDataset = chart.data.datasets?.[0]?.data || [];
-    if (selectedIndex < 0 || selectedIndex >= firstDataset.length) return;
+    const refForecast = chart.config.options?.plugins?.daySeparatorPlugin?.forecast || [];
+    if (selectedIndex < 0 || selectedIndex >= refForecast.length) return;
 
-    const selectedPoint = firstDataset[selectedIndex];
-    if (!selectedPoint?.x) return;
+    const selectedTime = refForecast[selectedIndex]?.time;
+    if (!selectedTime) return;
 
-    const x = xScale.getPixelForValue(selectedPoint.x);
+    const x = xScale.getPixelForValue(selectedTime);
     const topY = chart.chartArea.top;
     const bottomY = chart.chartArea.bottom;
     const ctx = chart.ctx;
