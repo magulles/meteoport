@@ -493,7 +493,7 @@ function initMarkers() {
       }).addTo(map);
     } else {
       marker = L.circleMarker(loc.coords, {
-        radius: 2,
+        radius: 3,
         color: "#1f2937",
         fillColor: "#1f2937",
         fillOpacity: 0.9,
