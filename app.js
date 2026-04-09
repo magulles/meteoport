@@ -751,12 +751,12 @@ if (firstTimeMs !== null && lastTimeMs !== null) {
     0, 0, 0, 0
   );
 
-  xAxisMax = Date.UTC(
-    lastDate.getUTCFullYear(),
-    lastDate.getUTCMonth(),
-    lastDate.getUTCDate() + 1,
-    0, 0, 0, 0
-  );
+xAxisMax = Date.UTC(
+  lastDate.getUTCFullYear(),
+  lastDate.getUTCMonth(),
+  lastDate.getUTCDate(),
+  21, 0, 0, 0
+);
 }
   
   const hsPort = forecast.map(f => ({ x: f.time, y: f.wavePort }));
