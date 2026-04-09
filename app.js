@@ -741,94 +741,93 @@ function renderChart() {
     waveChart.destroy();
   }
 
-  const daySeparatorPlugin = {
-    id: "daySeparatorPlugin",
-    afterDraw(chart) {
-      const { ctx, chartArea, scales } = chart;
-      const xScale = scales.x;
-      const forecast = chart.config.options?.plugins?.daySeparatorPlugin?.forecast || [];
+ const daySeparatorPlugin = {
+  id: "daySeparatorPlugin",
+  afterDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+    const forecast = chart.config.options?.plugins?.daySeparatorPlugin?.forecast || [];
 
-      if (!xScale || !forecast.length) return;
+    if (!xScale || !forecast.length) return;
 
-      const dayGroups = [];
-      let currentGroup = null;
+    const dayGroups = [];
+    let currentGroup = null;
 
-      for (let i = 0; i < forecast.length; i++) {
-        const t = forecast[i]?.time;
-        if (!t) continue;
+    for (let i = 0; i < forecast.length; i++) {
+      const t = forecast[i]?.time;
+      if (!t) continue;
 
-        const d = new Date(t);
-        const dayKey = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+      const d = new Date(t);
+      const dayKey = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
 
-        if (!currentGroup || currentGroup.dayKey !== dayKey) {
-          currentGroup = {
-            dayKey,
-            startIndex: i,
-            endIndex: i,
-            date: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
-          };
-          dayGroups.push(currentGroup);
-        } else {
-          currentGroup.endIndex = i;
-        }
+      if (!currentGroup || currentGroup.dayKey !== dayKey) {
+        currentGroup = {
+          dayKey,
+          startIndex: i,
+          endIndex: i,
+          date: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+        };
+        dayGroups.push(currentGroup);
+      } else {
+        currentGroup.endIndex = i;
       }
+    }
 
-      if (!dayGroups.length) return;
+    if (!dayGroups.length) return;
 
-      const todayRef = new Date();
-      const todayUtc = new Date(Date.UTC(
-        todayRef.getUTCFullYear(),
-        todayRef.getUTCMonth(),
-        todayRef.getUTCDate()
-      ));
+    const xMin = xScale.min;
+    const xMax = xScale.max;
+    if (xMin == null || xMax == null) return;
 
-      function diffDays(dateA, dateB) {
-        return Math.round((dateA - dateB) / 86400000);
-      }
+    const todayRef = new Date();
+    const todayUtc = new Date(Date.UTC(
+      todayRef.getUTCFullYear(),
+      todayRef.getUTCMonth(),
+      todayRef.getUTCDate()
+    ));
 
-      function getDayLabel(dayDate) {
-        const d = diffDays(dayDate, todayUtc);
-        if (d === -1) return "ayer";
-        if (d === 0) return "hoy";
-        if (d > 0) return `+${d}d`;
-        return `${d}d`;
-      }
+    function diffDays(dateA, dateB) {
+      return Math.round((dateA - dateB) / 86400000);
+    }
 
-      function getPixelForTimeBoundary(targetMs) {
-        let i = forecast.findIndex(f => new Date(f.time).getTime() >= targetMs);
+    function getDayLabel(dayDate) {
+      const d = diffDays(dayDate, todayUtc);
+      if (d === -1) return "ayer";
+      if (d === 0) return "hoy";
+      if (d > 0) return `+${d}d`;
+      return `${d}d`;
+    }
 
-        if (i === -1) return chartArea.right;
-        if (i === 0) return chartArea.left;
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
 
-        const t1 = new Date(forecast[i - 1].time).getTime();
-        const t2 = new Date(forecast[i].time).getTime();
-        const x1 = xScale.getPixelForValue(forecast[i - 1].time);
-        const x2 = xScale.getPixelForValue(forecast[i].time);
+    ctx.save();
 
-        const ratio = (targetMs - t1) / (t2 - t1);
-        return x1 + ratio * (x2 - x1);
-      }
+    // ============================
+    // 0) SOMBREADO DE HOY
+    // ============================
 
-      ctx.save();
+    const startToday = Date.UTC(
+      todayRef.getUTCFullYear(),
+      todayRef.getUTCMonth(),
+      todayRef.getUTCDate(),
+      0, 0, 0, 0
+    );
 
-      const now = new Date();
+    const startTomorrow = Date.UTC(
+      todayRef.getUTCFullYear(),
+      todayRef.getUTCMonth(),
+      todayRef.getUTCDate() + 1,
+      0, 0, 0, 0
+    );
 
-      const startToday = Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0, 0, 0
-      );
+    const shadeStart = Math.max(startToday, xMin);
+    const shadeEnd = Math.min(startTomorrow, xMax);
 
-      const startTomorrow = Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() + 1,
-        0, 0, 0
-      );
-
-      const leftEdge = getPixelForTimeBoundary(startToday);
-      const rightEdge = getPixelForTimeBoundary(startTomorrow);
+    if (shadeEnd > shadeStart) {
+      const leftEdge = xScale.getPixelForValue(shadeStart);
+      const rightEdge = xScale.getPixelForValue(shadeEnd);
 
       ctx.fillStyle = "rgba(37, 99, 235, 0.05)";
       ctx.fillRect(
@@ -837,38 +836,66 @@ function renderChart() {
         rightEdge - leftEdge,
         chartArea.bottom - chartArea.top
       );
-
-      ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
-      ctx.lineWidth = 1.1;
-      ctx.setLineDash([4, 4]);
-
-      for (let i = 1; i < dayGroups.length; i++) {
-        const x = xScale.getPixelForValue(forecast[dayGroups[i].startIndex].time);
-        ctx.beginPath();
-        ctx.moveTo(x, chartArea.top);
-        ctx.lineTo(x, chartArea.bottom);
-        ctx.stroke();
-      }
-
-      ctx.setLineDash([]);
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.font = "600 11px sans-serif";
-
-      dayGroups.forEach(group => {
-        const x1 = xScale.getPixelForValue(forecast[group.startIndex].time);
-        const x2 = xScale.getPixelForValue(forecast[group.endIndex].time);
-        const xMid = (x1 + x2) / 2;
-
-        const label = getDayLabel(group.date);
-
-        ctx.fillStyle = label === "hoy" ? "#111827" : "#6b7280";
-        ctx.fillText(label, xMid, chartArea.bottom + 6);
-      });
-
-      ctx.restore();
     }
-  };
+
+    // ============================
+    // 1) SEPARADORES ENTRE DÍAS
+    // ============================
+
+    ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
+    ctx.lineWidth = 1.1;
+    ctx.setLineDash([4, 4]);
+
+    for (let i = 1; i < dayGroups.length; i++) {
+      const boundaryTime = dayGroups[i].date.getTime();
+
+      if (boundaryTime < xMin || boundaryTime > xMax) continue;
+
+      const x = xScale.getPixelForValue(boundaryTime);
+      ctx.beginPath();
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.stroke();
+    }
+
+    // ============================
+    // 2) ETIQUETAS ABAJO
+    // ============================
+
+    ctx.setLineDash([]);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.font = "600 11px sans-serif";
+
+    dayGroups.forEach((group, idx) => {
+      const startMs = Math.max(group.date.getTime(), xMin);
+
+      const nextGroup = dayGroups[idx + 1];
+      const naturalEndMs = nextGroup
+        ? nextGroup.date.getTime()
+        : (new Date(group.date.getTime() + 24 * 3600 * 1000)).getTime();
+
+      const endMs = Math.min(naturalEndMs, xMax);
+
+      if (endMs <= startMs) return;
+
+      const x1 = xScale.getPixelForValue(startMs);
+      const x2 = xScale.getPixelForValue(endMs);
+      const xMid = (x1 + x2) / 2;
+
+      const label = getDayLabel(group.date);
+
+      ctx.fillStyle = label === "hoy" ? "#111827" : "#6b7280";
+      ctx.fillText(
+        label,
+        clamp(xMid, chartArea.left + 18, chartArea.right - 18),
+        chartArea.bottom + 6
+      );
+    });
+
+    ctx.restore();
+  }
+};
 
   const allHs = [
     ...hsPort.map(p => p.y),
@@ -943,7 +970,7 @@ function renderChart() {
       layout: {
         padding: {
           top: 20,
-          bottom: 24
+          bottom: 28
         }
       },
       plugins: {
