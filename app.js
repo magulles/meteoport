@@ -722,13 +722,10 @@ function renderChart() {
   if (!selectedLocation || !waveChartCanvas) return;
 
   const forecast = selectedLocation.forecast;
-  const labels = forecast.map(f => formatTimeLabel(f.time));
-
-  const hsPort = forecast.map(f => f.wavePort);
-  const hsPde = forecast.map(f => f.wavePde);
-  const hsCop = forecast.map(f => f.waveCopernicus);
-  const hsObs = forecast.map(f => f.waveObs);
-
+  const hsPort = forecast.map(f => ({ x: f.time, y: f.wavePort }));
+  const hsPde = forecast.map(f => ({ x: f.time, y: f.wavePde }));
+  const hsCop = forecast.map(f => ({ x: f.time, y: f.waveCopernicus }));
+  const hsObs = forecast.map(f => ({ x: f.time, y: f.waveObs }));
   const dirPde = forecast.map(f => f.dirPde);
   const dirCop = forecast.map(f => f.dirCopernicus);
 
@@ -866,11 +863,11 @@ function renderChart() {
   };
 
   const allHs = [
-    ...hsPort,
-    ...hsPde,
-    ...hsCop,
-    ...hsObs
-  ].filter(v => v != null && !Number.isNaN(v));
+  ...hsPort.map(p => p.y),
+  ...hsPde.map(p => p.y),
+  ...hsCop.map(p => p.y),
+  ...hsObs.map(p => p.y)
+].filter(v => v != null && !Number.isNaN(v));
 
   const maxHs = allHs.length ? Math.max(...allHs) : 2;
   const yMaxChart = maxHs + 0.8;
