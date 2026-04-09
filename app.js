@@ -735,14 +735,12 @@ function renderChart() {
 
   const forecast = selectedLocation.forecast;
 const firstTimeMs = forecast.length ? new Date(forecast[0].time).getTime() : null;
-const lastTimeMs = forecast.length ? new Date(forecast[forecast.length - 1].time).getTime() : null;
 
 let xAxisMin = null;
 let xAxisMax = null;
 
-if (firstTimeMs !== null && lastTimeMs !== null) {
+if (firstTimeMs !== null) {
   const firstDate = new Date(firstTimeMs);
-  const lastDate = new Date(lastTimeMs);
 
   xAxisMin = Date.UTC(
     firstDate.getUTCFullYear(),
@@ -751,13 +749,16 @@ if (firstTimeMs !== null && lastTimeMs !== null) {
     0, 0, 0, 0
   );
 
-xAxisMax = Date.UTC(
-  lastDate.getUTCFullYear(),
-  lastDate.getUTCMonth(),
-  lastDate.getUTCDate(),
-  21, 0, 0, 0
-);
+  // desde ayer 00h hasta hoy+4d 21h
+  // es decir: primer día + 5 días, a las 21:00
+  xAxisMax = Date.UTC(
+    firstDate.getUTCFullYear(),
+    firstDate.getUTCMonth(),
+    firstDate.getUTCDate() + 5,
+    21, 0, 0, 0
+  );
 }
+
   
   const hsPort = forecast.map(f => ({ x: f.time, y: f.wavePort }));
   const hsPde = forecast.map(f => ({ x: f.time, y: f.wavePde }));
