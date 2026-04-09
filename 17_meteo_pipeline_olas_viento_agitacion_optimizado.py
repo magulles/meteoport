@@ -1823,6 +1823,28 @@ def download_port_agitation(points):
 # =========================
 # 5) FUSIÓN FINAL
 # =========================
+def first_valid_requested_coords(*sources):
+    for s in sources:
+        if not s:
+            continue
+        lon = s.get("requested_lon", s.get("lon"))
+        lat = s.get("requested_lat", s.get("lat"))
+        if lon is not None and lat is not None:
+            return lon, lat
+    return None, None
+
+
+def first_valid_coords(*sources):
+    for s in sources:
+        if not s:
+            continue
+        lon = s.get("lon")
+        lat = s.get("lat")
+        if lon is not None and lat is not None:
+            return lon, lat
+    return None, None
+
+
 def merge_all_sources(copernicus_points, pde_points, wind_points, agitation_points):
     print("\n" + "=" * 60)
     print("FUSIÓN FINAL: COPERNICUS + PDE + VIENTO + AGITACIÓN")
@@ -1902,10 +1924,17 @@ def merge_all_sources(copernicus_points, pde_points, wind_points, agitation_poin
 
         base = cop or pde or agit or wind or {}
         point_id = base.get("point_id", idx)
-        requested_lon = base.get("requested_lon", base.get("lon"))
-        requested_lat = base.get("requested_lat", base.get("lat"))
-        lon = base.get("lon", requested_lon)
-        lat = base.get("lat", requested_lat)
+
+        requested_lon, requested_lat = first_valid_requested_coords(cop, pde, agit, wind)
+        lon, lat = first_valid_coords(cop, pde, agit, wind)
+
+        if requested_lon is None or requested_lat is None:
+            requested_lon = base.get("requested_lon", base.get("lon"))
+            requested_lat = base.get("requested_lat", base.get("lat"))
+
+        if lon is None or lat is None:
+            lon = requested_lon
+            lat = requested_lat
 
         merged_point = {
             "point_id": point_id,
@@ -1998,6 +2027,7 @@ def merge_all_sources(copernicus_points, pde_points, wind_points, agitation_poin
     print(f"\nOK. Archivo final guardado en: {METEO_OUTPUT_JSON}")
     return output
 
+
 # =========================
 # MAIN
 # =========================
@@ -2058,4 +2088,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
