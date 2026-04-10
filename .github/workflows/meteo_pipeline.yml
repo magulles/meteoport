@@ -1,51 +1,51 @@
-name: Meteo pipeline
+# name: Meteo pipeline
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "47 3 * * *"
-    - cron: "55 15 * * *"
+#on:
+#  workflow_dispatch:
+#  schedule:
+#    - cron: "47 3 * * *"
+#    - cron: "55 15 * * *"
     
-permissions:
-  contents: write
+#permissions:
+#  contents: write
   
-jobs:
-  run-meteo:
-    runs-on: ubuntu-latest
+#jobs:
+#  run-meteo:
+#    runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
+#    steps:
+#      - name: Checkout repo
+#        uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
+#      - name: Set up Python
+ #       uses: actions/setup-python@v6
+ #       with:
+ #         python-version: "3.11"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install copernicusmarine xarray pandas numpy requests netCDF4 h5py h5netcdf
+ #     - name: Install dependencies
+ #       run: |
+ #         python -m pip install --upgrade pip
+ #         pip install copernicusmarine xarray pandas numpy requests netCDF4 h5py h5netcdf
 
-      - name: Run meteo pipeline
-        env:
-          COPERNICUS_USERNAME: ${{ secrets.COPERNICUS_USERNAME }}
-          COPERNICUS_PASSWORD: ${{ secrets.COPERNICUS_PASSWORD }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-        run: |
-          python 1_descarga_olas_pde.py
-          python 2_descarga_olas_cop.py
-          python 3_descarga_agitacion_pde.py
-          python 4_descarga_olas_boyas.py
-          python 5_descarga_viento.py
-          python 6_merge_all.py
-          python aux_actualizar_fechas_rutas.py
+ #     - name: Run meteo pipeline
+ #       env:
+ #        COPERNICUS_USERNAME: ${{ secrets.COPERNICUS_USERNAME }}
+ #         COPERNICUS_PASSWORD: ${{ secrets.COPERNICUS_PASSWORD }}
+ #         OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+#        run: |
+ #         python 1_descarga_olas_pde.py
+ #         python 2_descarga_olas_cop.py
+ #         python 3_descarga_agitacion_pde.py
+ #         python 4_descarga_olas_boyas.py
+ #         python 5_descarga_viento.py
+  #        python 6_merge_all.py
+  #        python aux_actualizar_fechas_rutas.py
           
           
-      - name: Commit updated JSON files
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add *.json
-          git diff --cached --quiet || git commit -m "Update meteo data"
-          git push
+ #     - name: Commit updated JSON files
+ #       run: |
+ #         git config user.name "github-actions[bot]"
+ #         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+  #        git add *.json
+ #         git diff --cached --quiet || git commit -m "Update meteo data"
+#          git push
