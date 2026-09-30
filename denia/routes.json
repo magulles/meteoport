@@ -1,0 +1,256 @@
+[
+  {
+    "id": "ruta_1",
+    "name": "Val-Pal",
+    "departure_time": "2026-04-10T21:45:00Z",
+    "arrival_time": "2026-04-11T05:00:00Z",
+    "points": [
+      "valencia1_puerto",
+      "valencia2_puerto",
+      "valencia",
+      "valpal4",
+      "valpal5",
+      "valpal6",
+      "palma"
+    ]
+  },
+  {
+    "id": "ruta_2",
+    "name": "Mal-Mel",
+    "departure_time": "2026-04-10T17:00:00Z",
+    "arrival_time": "2026-04-10T23:00:00Z",
+    "points": [
+      "malaga1_puerto",
+      "malaga2_puerto",
+      "malaga",
+      "malmel1",
+      "malmel2",
+      "malmel3",
+      "melilla"
+    ]
+  },
+  {
+    "id": "ruta_3",
+    "name": "Huel-Ten",
+    "departure_time": "2026-04-10T16:00:00Z",
+    "arrival_time": "2026-04-12T03:00:00Z",
+    "points": [
+      "huelva",
+      "huelten2",
+      "huelten3",
+      "huelten4",
+      "huelten5",
+      "huelten6",
+      "huelten7",
+      "tenerife",
+      "tenerife2_puerto",
+      "tenerife1_puerto"
+    ]
+  },
+  {
+    "id": "ruta_4",
+    "name": "Huel-laspal",
+    "departure_time": "2026-04-10T16:00:00Z",
+    "arrival_time": "2026-04-12T03:00:00Z",
+    "points": [
+      "huelva",
+      "huelten2",
+      "huelten3",
+      "huelten4",
+      "huelten5",
+      "huelten6",
+      "huelcan1",
+      "laspalmas",
+      "laspalmas2_puerto",
+      "laspalmas1_puerto"
+    ]
+  },
+  {
+    "id": "ruta_5",
+    "name": "alg-tangemed",
+    "departure_time": "2026-04-10T07:00:00Z",
+    "arrival_time": "2026-04-10T08:00:00Z",
+    "points": [
+      "algeciras2_puerto",
+      "algeciras3_puerto",
+      "algeciras",
+      "algetanger1",
+      "tangemed"
+    ]
+  },
+  {
+    "id": "ruta_6",
+    "name": "alg-ceuta",
+    "departure_time": "2026-04-10T07:00:00Z",
+    "arrival_time": "2026-04-10T08:00:00Z",
+    "points": [
+      "algeciras2_puerto",
+      "algeciras3_puerto",
+      "algeciras",
+      "algeceuta1",
+      "ceuta"
+    ]
+  },
+  {
+    "id": "ruta_7",
+    "name": "val-mostag",
+    "departure_time": "2026-04-10T18:30:00Z",
+    "arrival_time": "2026-04-11T09:00:00Z",
+    "points": [
+      "valencia1_puerto",
+      "valencia2_puerto",
+      "valencia",
+      "valarg1",
+      "denibi0",
+      "valmost1",
+      "valmost2",
+      "valmost3",
+      "valmost4",
+      "mostaganem"
+    ]
+  },
+  {
+    "id": "ruta_8",
+    "name": "val-argel",
+    "departure_time": "2026-04-10T18:30:00Z",
+    "arrival_time": "2026-04-11T13:00:00Z",
+    "points": [
+      "valencia1_puerto",
+      "valencia2_puerto",
+      "valencia",
+      "valarg1",
+      "denibi1",
+      "valarg2",
+      "valarg3",
+      "valarg4",
+      "argel"
+    ]
+  },
+  {
+    "id": "ruta_9",
+    "name": "den-ibi",
+    "departure_time": "2026-04-10T17:00:00Z",
+    "arrival_time": "2026-04-10T19:00:00Z",
+    "points": [
+      "denia",
+      "denibi0",
+      "denibi1",
+      "denibi2",
+      "denibi3",
+      "ibiza"
+    ]
+  },
+  {
+    "id": "ruta_10",
+    "name": "den-ibisur",
+    "departure_time": "2026-04-10T17:00:00Z",
+    "arrival_time": "2026-04-10T19:00:00Z",
+    "points": [
+      "denia",
+      "denibi0",
+      "denibi1",
+      "denibi2",
+      "denibisur1",
+      "denibisur2",
+      "ibiza"
+    ]
+  },
+  {
+    "id": "ruta_11",
+    "name": "ibi-palma",
+    "departure_time": "2026-04-10T20:00:00Z",
+    "arrival_time": "2026-04-10T22:00:00Z",
+    "points": [
+      "ibiza",
+      "ibipal1",
+      "valpal6",
+      "palma"
+    ]
+  },
+  {
+    "id": "ruta_12",
+    "name": "alc-ciud",
+    "departure_time": "2026-04-10T08:30:00Z",
+    "arrival_time": "2026-04-10T09:45:00Z",
+    "points": [
+      "alcudia",
+      "baralc5",
+      "alciud2",
+      "alciud3",
+      "ciudadela"
+    ]
+  },
+  {
+    "id": "ruta_13",
+    "name": "bar-argel",
+    "departure_time": "2026-04-10T17:00:00Z",
+    "arrival_time": "2026-04-11T13:00:00Z",
+    "points": [
+      "boya1",
+      "barpal1",
+      "barpal2",
+      "barpal3",
+      "barpal4",
+      "bararg1",
+      "bararg2",
+      "bararg3",
+      "bararg4",
+      "argel"
+    ]
+  },
+  {
+    "id": "ruta_14",
+    "name": "bar-palma",
+    "departure_time": "2026-04-10T22:15:00Z",
+    "arrival_time": "2026-04-11T05:30:00Z",
+    "points": [
+      "boya1",
+      "barpal1",
+      "barpal2",
+      "barpal3",
+      "barpal4",
+      "valpal6",
+      "palma"
+    ]
+  },
+  {
+    "id": "ruta_15",
+    "name": "bar-alc",
+    "departure_time": "2026-04-10T15:45:00Z",
+    "arrival_time": "2026-04-10T19:15:00Z",
+    "points": [
+      "boya1",
+      "baralc1",
+      "baralc2",
+      "baralc3",
+      "baralc4",
+      "baralc5",
+      "alcudia"
+    ]
+  },
+  {
+    "id": "ruta_16",
+    "name": "bar-ciud",
+    "departure_time": "2026-04-10T15:45:00Z",
+    "arrival_time": "2026-04-10T21:00:00Z",
+    "points": [
+      "boya1",
+      "baralc1",
+      "baralc2",
+      "barciud1",
+      "alciud3",
+      "ciudadela"
+    ]
+  },
+  {
+    "id": "ruta_17",
+    "name": "mia-bim",
+    "departure_time": "2026-04-10T08:00:00Z",
+    "arrival_time": "2026-04-10T10:00:00Z",
+    "points": [
+      "miami",
+      "miami1",
+      "bimini"
+    ]
+  }
+]
