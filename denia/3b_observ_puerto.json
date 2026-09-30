@@ -1,0 +1,144 @@
+{
+  "summary": {
+    "generated_at_utc": "2026-09-30T09:43:28Z",
+    "past_hours": 24,
+    "resolution": "1h",
+    "source": "simulated_demo"
+  },
+  "points": [
+    {
+      "point_id": 3,
+      "name": "denia_puerto",
+      "lon": 0.11942,
+      "lat": 38.841425,
+      "source": "simulated_demo",
+      "observations": [
+        {
+          "time": "2026-09-29T09:00:00Z",
+          "hs_port_obs": 0.18,
+          "sea_level_obs": -0.28
+        },
+        {
+          "time": "2026-09-29T10:00:00Z",
+          "hs_port_obs": 0.177,
+          "sea_level_obs": -0.434
+        },
+        {
+          "time": "2026-09-29T11:00:00Z",
+          "hs_port_obs": 0.174,
+          "sea_level_obs": -0.5
+        },
+        {
+          "time": "2026-09-29T12:00:00Z",
+          "hs_port_obs": 0.172,
+          "sea_level_obs": -0.447
+        },
+        {
+          "time": "2026-09-29T13:00:00Z",
+          "hs_port_obs": 0.173,
+          "sea_level_obs": -0.289
+        },
+        {
+          "time": "2026-09-29T14:00:00Z",
+          "hs_port_obs": 0.173,
+          "sea_level_obs": -0.086
+        },
+        {
+          "time": "2026-09-29T15:00:00Z",
+          "hs_port_obs": 0.181,
+          "sea_level_obs": 0.117
+        },
+        {
+          "time": "2026-09-29T16:00:00Z",
+          "hs_port_obs": 0.179,
+          "sea_level_obs": 0.27
+        },
+        {
+          "time": "2026-09-29T17:00:00Z",
+          "hs_port_obs": 0.185,
+          "sea_level_obs": 0.357
+        },
+        {
+          "time": "2026-09-29T18:00:00Z",
+          "hs_port_obs": 0.189,
+          "sea_level_obs": 0.347
+        },
+        {
+          "time": "2026-09-29T19:00:00Z",
+          "hs_port_obs": 0.179,
+          "sea_level_obs": 0.223
+        },
+        {
+          "time": "2026-09-29T20:00:00Z",
+          "hs_port_obs": 0.17,
+          "sea_level_obs": 0.04
+        },
+        {
+          "time": "2026-09-29T21:00:00Z",
+          "hs_port_obs": 0.167,
+          "sea_level_obs": -0.122
+        },
+        {
+          "time": "2026-09-29T22:00:00Z",
+          "hs_port_obs": 0.15,
+          "sea_level_obs": -0.279
+        },
+        {
+          "time": "2026-09-29T23:00:00Z",
+          "hs_port_obs": 0.145,
+          "sea_level_obs": -0.333
+        },
+        {
+          "time": "2026-09-30T00:00:00Z",
+          "hs_port_obs": 0.126,
+          "sea_level_obs": -0.299
+        },
+        {
+          "time": "2026-09-30T01:00:00Z",
+          "hs_port_obs": 0.122,
+          "sea_level_obs": -0.166
+        },
+        {
+          "time": "2026-09-30T02:00:00Z",
+          "hs_port_obs": 0.115,
+          "sea_level_obs": 0.017
+        },
+        {
+          "time": "2026-09-30T03:00:00Z",
+          "hs_port_obs": 0.106,
+          "sea_level_obs": 0.216
+        },
+        {
+          "time": "2026-09-30T04:00:00Z",
+          "hs_port_obs": 0.1,
+          "sea_level_obs": 0.396
+        },
+        {
+          "time": "2026-09-30T05:00:00Z",
+          "hs_port_obs": 0.108,
+          "sea_level_obs": 0.474
+        },
+        {
+          "time": "2026-09-30T06:00:00Z",
+          "hs_port_obs": 0.112,
+          "sea_level_obs": 0.449
+        },
+        {
+          "time": "2026-09-30T07:00:00Z",
+          "hs_port_obs": 0.132,
+          "sea_level_obs": 0.32
+        },
+        {
+          "time": "2026-09-30T08:00:00Z",
+          "hs_port_obs": 0.138,
+          "sea_level_obs": 0.117
+        },
+        {
+          "time": "2026-09-30T09:00:00Z",
+          "hs_port_obs": 0.159,
+          "sea_level_obs": -0.136
+        }
+      ]
+    }
+  ]
+}
