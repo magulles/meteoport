@@ -43,7 +43,7 @@ jobs:
           python 3b_observ_puerto.py
           python 4_descarga_olas_boyas.py
           python 5_descarga_viento.py
-          python 6_merge_all.py
+          python 6_merge_all_actualizado.py
           python aux_actualizar_fechas_rutas.py
 
       - name: Commit updated JSON files
