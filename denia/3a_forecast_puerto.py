@@ -8,7 +8,7 @@ from pathlib import Path
 import json, math, random
 
 POINTS_FILE = "lonp_latp.txt"
-OUTPUT_JSON = "3_forecast_puerto.json"
+OUTPUT_JSON = "3a_forecast_puerto.json"
 PAST_DAYS = 1
 FUTURE_DAYS = 3
 TOTAL_HOURS = (PAST_DAYS + FUTURE_DAYS) * 24
