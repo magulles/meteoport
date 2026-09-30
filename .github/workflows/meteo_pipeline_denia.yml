@@ -39,7 +39,8 @@ jobs:
         run: |
           python 1_descarga_olas_pde.py
           python 2_descarga_olas_cop.py
-          python 3_descarga_agitacion_pde.py
+          python 3a_forecast_puerto.py
+          python 3b_observ_puerto.py
           python 4_descarga_olas_boyas.py
           python 5_descarga_viento.py
           python 6_merge_all.py
