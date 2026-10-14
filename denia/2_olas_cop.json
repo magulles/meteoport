@@ -1,12 +1,12 @@
 {
   "summary": {
-    "generated_at_utc": "2026-10-13T22:49:13Z",
+    "generated_at_utc": "2026-10-14T09:09:15Z",
     "past_days": 1,
     "copernicus_forecast_days": 5,
     "copernicus_forecast_hours": 144,
     "copernicus_dataset_glo": "cmems_mod_glo_wav_anfc_0.083deg_PT3H-i",
     "points_total": 3,
-    "total_copernicus_records": 144
+    "total_copernicus_records": 147
   },
   "points": [
     {
@@ -14,1020 +14,954 @@
       "name": "denia",
       "requested_lon": 0.1401479045015641,
       "requested_lat": 38.84851176088488,
-      "lon": null,
-      "lat": null,
+      "lon": 0.1666666666666572,
+      "lat": 38.91666666666666,
       "forecast": [
         {
-          "time": "2026-10-12T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
           "time": "2026-10-13T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 5.75,
+          "di_cop": 49.05
         },
         {
           "time": "2026-10-13T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 5.27,
+          "di_cop": 49.02
         },
         {
           "time": "2026-10-13T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 6.47,
+          "di_cop": 48.17
         },
         {
           "time": "2026-10-13T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 6.43,
+          "di_cop": 46.97
         },
         {
           "time": "2026-10-13T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 6.41,
+          "di_cop": 46.46
         },
         {
           "time": "2026-10-13T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.18,
+          "tp_cop": 6.18,
+          "di_cop": 47.41
         },
         {
           "time": "2026-10-13T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.24,
+          "tp_cop": 5.43,
+          "di_cop": 61.5
         },
         {
           "time": "2026-10-13T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.21,
+          "tp_cop": 5.47,
+          "di_cop": 68.64
         },
         {
           "time": "2026-10-14T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 5.16,
+          "di_cop": 53.48
         },
         {
           "time": "2026-10-14T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 4.95,
+          "di_cop": 53.33
         },
         {
           "time": "2026-10-14T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 4.72,
+          "di_cop": 56.37
         },
         {
           "time": "2026-10-14T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 4.54,
+          "di_cop": 64.23
         },
         {
           "time": "2026-10-14T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 4.53,
+          "di_cop": 76.93
         },
         {
           "time": "2026-10-14T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 5.14,
+          "di_cop": 84.99
         },
         {
           "time": "2026-10-14T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 5.04,
+          "di_cop": 87.69
         },
         {
           "time": "2026-10-14T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.18,
+          "tp_cop": 4.81,
+          "di_cop": 94.58
         },
         {
           "time": "2026-10-15T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.21,
+          "tp_cop": 4.14,
+          "di_cop": 101.34
         },
         {
           "time": "2026-10-15T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.22,
+          "tp_cop": 4.08,
+          "di_cop": 101.69
         },
         {
           "time": "2026-10-15T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.24,
+          "tp_cop": 4.04,
+          "di_cop": 98.44
         },
         {
           "time": "2026-10-15T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.25,
+          "tp_cop": 5.15,
+          "di_cop": 92.99
         },
         {
           "time": "2026-10-15T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.27,
+          "tp_cop": 5.61,
+          "di_cop": 90.18
         },
         {
           "time": "2026-10-15T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.28,
+          "tp_cop": 5.24,
+          "di_cop": 94.62
         },
         {
           "time": "2026-10-15T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.29,
+          "tp_cop": 4.92,
+          "di_cop": 101.38
         },
         {
           "time": "2026-10-15T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.29,
+          "tp_cop": 4.7,
+          "di_cop": 107.03
         },
         {
           "time": "2026-10-16T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.27,
+          "tp_cop": 4.5,
+          "di_cop": 110.63
         },
         {
           "time": "2026-10-16T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.24,
+          "tp_cop": 4.29,
+          "di_cop": 110.58
         },
         {
           "time": "2026-10-16T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.22,
+          "tp_cop": 4.17,
+          "di_cop": 111.72
         },
         {
           "time": "2026-10-16T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.21,
+          "tp_cop": 4.1,
+          "di_cop": 116.48
         },
         {
           "time": "2026-10-16T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.2,
+          "tp_cop": 4.02,
+          "di_cop": 120.38
         },
         {
           "time": "2026-10-16T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.25,
+          "tp_cop": 3.92,
+          "di_cop": 126.18
         },
         {
           "time": "2026-10-16T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.29,
+          "tp_cop": 2.47,
+          "di_cop": 136.62
         },
         {
           "time": "2026-10-16T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.22,
+          "tp_cop": 3.37,
+          "di_cop": 133.56
         },
         {
           "time": "2026-10-17T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 3.59,
+          "di_cop": 123.6
         },
         {
           "time": "2026-10-17T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.12,
+          "tp_cop": 3.53,
+          "di_cop": 116.42
         },
         {
           "time": "2026-10-17T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.11,
+          "tp_cop": 3.45,
+          "di_cop": 112.83
         },
         {
           "time": "2026-10-17T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.1,
+          "tp_cop": 3.36,
+          "di_cop": 112.04
         },
         {
           "time": "2026-10-17T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.09,
+          "tp_cop": 3.28,
+          "di_cop": 113.13
         },
         {
           "time": "2026-10-17T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.09,
+          "tp_cop": 3.16,
+          "di_cop": 106.32
         },
         {
           "time": "2026-10-17T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.1,
+          "tp_cop": 2.79,
+          "di_cop": 83.96
         },
         {
           "time": "2026-10-17T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.12,
+          "tp_cop": 4.23,
+          "di_cop": 59.77
+        },
+        {
+          "time": "2026-10-18T00:00:00Z",
+          "hs_cop": 0.17,
+          "tp_cop": 7.41,
+          "di_cop": 54.83
+        },
+        {
+          "time": "2026-10-18T03:00:00Z",
+          "hs_cop": 0.54,
+          "tp_cop": 3.59,
+          "di_cop": 67.05
+        },
+        {
+          "time": "2026-10-18T06:00:00Z",
+          "hs_cop": 1.29,
+          "tp_cop": 5.03,
+          "di_cop": 26.35
+        },
+        {
+          "time": "2026-10-18T09:00:00Z",
+          "hs_cop": 1.88,
+          "tp_cop": 6.15,
+          "di_cop": 21.43
+        },
+        {
+          "time": "2026-10-18T12:00:00Z",
+          "hs_cop": 2.3,
+          "tp_cop": 7.31,
+          "di_cop": 24.48
+        },
+        {
+          "time": "2026-10-18T15:00:00Z",
+          "hs_cop": 2.94,
+          "tp_cop": 8.37,
+          "di_cop": 29.76
+        },
+        {
+          "time": "2026-10-18T18:00:00Z",
+          "hs_cop": 3.21,
+          "tp_cop": 8.94,
+          "di_cop": 31.57
+        },
+        {
+          "time": "2026-10-18T21:00:00Z",
+          "hs_cop": 3.24,
+          "tp_cop": 9.26,
+          "di_cop": 35.81
+        },
+        {
+          "time": "2026-10-19T00:00:00Z",
+          "hs_cop": 2.97,
+          "tp_cop": 9.49,
+          "di_cop": 39.46
         }
       ],
       "cop_search_info": {
         "dataset_id": "cmems_mod_glo_wav_anfc_0.083deg_PT3H-i",
-        "adjusted_request_point": false,
-        "used_request_lon": null,
-        "used_request_lat": null,
-        "distance_to_selected_grid_km": null,
-        "hs_valid_count": 0,
-        "tp_valid_count": 0,
-        "di_valid_count": 0,
-        "total_count": 48,
-        "hs_valid_ratio": 0.0,
-        "attempts_made": 25,
+        "adjusted_request_point": true,
+        "used_request_lon": 0.1401479045015641,
+        "used_request_lat": 38.93151176088488,
+        "distance_to_selected_grid_km": 2.826,
+        "hs_valid_count": 49,
+        "tp_valid_count": 49,
+        "di_valid_count": 49,
+        "total_count": 49,
+        "hs_valid_ratio": 1.0,
+        "attempts_made": 2,
         "min_hs_valid_ratio_target": 0.5
-      },
-      "cop_error": "No se pudo obtener ninguna celda válida de oleaje Copernicus GLO",
-      "cop_search_errors": [
-        "intento 01 req=(0.14015,38.84851) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 02 req=(0.14015,38.93151) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 03 req=(0.14015,38.76551) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 04 req=(0.22315,38.84851) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 05 req=(0.05715,38.84851) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 06 req=(0.05715,38.93151) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 07 req=(0.22315,38.76551) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 08 req=(0.05715,38.76551) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 09 req=(0.22315,38.93151) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 10 req=(0.14015,39.01451) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 11 req=(0.14015,38.68251) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 12 req=(-0.02585,38.84851) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 13 req=(0.30615,38.84851) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 14 req=(0.30615,38.68251) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 15 req=(-0.02585,39.01451) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 16 req=(-0.02585,38.68251) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 17 req=(0.30615,39.01451) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 18 req=(0.14015,39.18051) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 19 req=(0.14015,38.51651) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 20 req=(0.47215,38.84851) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 21 req=(-0.19185,38.84851) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 22 req=(0.47215,39.18051) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 23 req=(-0.19185,39.18051) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 24 req=(0.47215,38.51651) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 25 req=(-0.19185,38.51651) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()"
-      ]
+      }
     },
     {
       "point_id": 2,
       "name": "denibi1",
       "requested_lon": 0.6732173421844423,
       "requested_lat": 38.83472936063023,
-      "lon": null,
-      "lat": null,
+      "lon": 0.6666666666666572,
+      "lat": 38.83333333333333,
       "forecast": [
         {
-          "time": "2026-10-12T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
           "time": "2026-10-13T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 5.61,
+          "di_cop": 42.81
         },
         {
           "time": "2026-10-13T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 5.44,
+          "di_cop": 45.47
         },
         {
           "time": "2026-10-13T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 6.55,
+          "di_cop": 44.92
         },
         {
           "time": "2026-10-13T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.17,
+          "tp_cop": 6.39,
+          "di_cop": 43.03
         },
         {
           "time": "2026-10-13T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.19,
+          "tp_cop": 6.37,
+          "di_cop": 41.85
         },
         {
           "time": "2026-10-13T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.19,
+          "tp_cop": 6.19,
+          "di_cop": 42.11
         },
         {
           "time": "2026-10-13T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.18,
+          "tp_cop": 5.79,
+          "di_cop": 43.91
         },
         {
           "time": "2026-10-13T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.17,
+          "tp_cop": 5.47,
+          "di_cop": 46.51
         },
         {
           "time": "2026-10-14T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 5.12,
+          "di_cop": 49.89
         },
         {
           "time": "2026-10-14T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 4.87,
+          "di_cop": 54.83
         },
         {
           "time": "2026-10-14T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 4.67,
+          "di_cop": 62.0
         },
         {
           "time": "2026-10-14T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 4.44,
+          "di_cop": 73.9
         },
         {
           "time": "2026-10-14T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 4.19,
+          "di_cop": 85.85
         },
         {
           "time": "2026-10-14T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.17,
+          "tp_cop": 4.49,
+          "di_cop": 93.64
         },
         {
           "time": "2026-10-14T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.21,
+          "tp_cop": 3.99,
+          "di_cop": 101.56
         },
         {
           "time": "2026-10-14T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.25,
+          "tp_cop": 3.69,
+          "di_cop": 104.33
         },
         {
           "time": "2026-10-15T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.26,
+          "tp_cop": 3.84,
+          "di_cop": 105.54
         },
         {
           "time": "2026-10-15T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.27,
+          "tp_cop": 3.79,
+          "di_cop": 106.74
         },
         {
           "time": "2026-10-15T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.29,
+          "tp_cop": 3.98,
+          "di_cop": 105.04
         },
         {
           "time": "2026-10-15T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.3,
+          "tp_cop": 4.4,
+          "di_cop": 100.63
         },
         {
           "time": "2026-10-15T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.32,
+          "tp_cop": 5.5,
+          "di_cop": 100.57
         },
         {
           "time": "2026-10-15T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.33,
+          "tp_cop": 4.8,
+          "di_cop": 105.89
         },
         {
           "time": "2026-10-15T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.33,
+          "tp_cop": 4.64,
+          "di_cop": 111.63
         },
         {
           "time": "2026-10-15T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.32,
+          "tp_cop": 4.51,
+          "di_cop": 115.35
         },
         {
           "time": "2026-10-16T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.29,
+          "tp_cop": 4.29,
+          "di_cop": 117.77
         },
         {
           "time": "2026-10-16T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.27,
+          "tp_cop": 4.12,
+          "di_cop": 120.36
         },
         {
           "time": "2026-10-16T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.25,
+          "tp_cop": 3.98,
+          "di_cop": 125.56
         },
         {
           "time": "2026-10-16T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.24,
+          "tp_cop": 3.9,
+          "di_cop": 129.22
         },
         {
           "time": "2026-10-16T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.23,
+          "tp_cop": 3.83,
+          "di_cop": 129.97
         },
         {
           "time": "2026-10-16T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.21,
+          "tp_cop": 3.73,
+          "di_cop": 130.34
         },
         {
           "time": "2026-10-16T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.23,
+          "tp_cop": 3.65,
+          "di_cop": 134.74
         },
         {
           "time": "2026-10-16T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.2,
+          "tp_cop": 3.52,
+          "di_cop": 136.52
         },
         {
           "time": "2026-10-17T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 3.45,
+          "di_cop": 131.47
         },
         {
           "time": "2026-10-17T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 3.37,
+          "di_cop": 127.88
         },
         {
           "time": "2026-10-17T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.12,
+          "tp_cop": 3.28,
+          "di_cop": 125.56
         },
         {
           "time": "2026-10-17T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.11,
+          "tp_cop": 3.2,
+          "di_cop": 124.04
         },
         {
           "time": "2026-10-17T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.1,
+          "tp_cop": 3.19,
+          "di_cop": 121.86
         },
         {
           "time": "2026-10-17T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.1,
+          "tp_cop": 3.36,
+          "di_cop": 118.73
         },
         {
           "time": "2026-10-17T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.12,
+          "tp_cop": 4.0,
+          "di_cop": 96.9
         },
         {
           "time": "2026-10-17T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.18,
+          "tp_cop": 4.15,
+          "di_cop": 62.22
+        },
+        {
+          "time": "2026-10-18T00:00:00Z",
+          "hs_cop": 0.46,
+          "tp_cop": 3.54,
+          "di_cop": 86.13
+        },
+        {
+          "time": "2026-10-18T03:00:00Z",
+          "hs_cop": 0.69,
+          "tp_cop": 3.92,
+          "di_cop": 87.22
+        },
+        {
+          "time": "2026-10-18T06:00:00Z",
+          "hs_cop": 0.99,
+          "tp_cop": 4.9,
+          "di_cop": 56.04
+        },
+        {
+          "time": "2026-10-18T09:00:00Z",
+          "hs_cop": 1.67,
+          "tp_cop": 6.51,
+          "di_cop": 19.07
+        },
+        {
+          "time": "2026-10-18T12:00:00Z",
+          "hs_cop": 2.06,
+          "tp_cop": 7.41,
+          "di_cop": 11.0
+        },
+        {
+          "time": "2026-10-18T15:00:00Z",
+          "hs_cop": 3.11,
+          "tp_cop": 8.28,
+          "di_cop": 14.1
+        },
+        {
+          "time": "2026-10-18T18:00:00Z",
+          "hs_cop": 4.2,
+          "tp_cop": 8.86,
+          "di_cop": 19.55
+        },
+        {
+          "time": "2026-10-18T21:00:00Z",
+          "hs_cop": 4.19,
+          "tp_cop": 9.35,
+          "di_cop": 24.26
+        },
+        {
+          "time": "2026-10-19T00:00:00Z",
+          "hs_cop": 3.61,
+          "tp_cop": 9.42,
+          "di_cop": 28.48
         }
       ],
       "cop_search_info": {
         "dataset_id": "cmems_mod_glo_wav_anfc_0.083deg_PT3H-i",
         "adjusted_request_point": false,
-        "used_request_lon": null,
-        "used_request_lat": null,
-        "distance_to_selected_grid_km": null,
-        "hs_valid_count": 0,
-        "tp_valid_count": 0,
-        "di_valid_count": 0,
-        "total_count": 48,
-        "hs_valid_ratio": 0.0,
-        "attempts_made": 25,
+        "used_request_lon": 0.6732173421844423,
+        "used_request_lat": 38.83472936063023,
+        "distance_to_selected_grid_km": 0.588,
+        "hs_valid_count": 49,
+        "tp_valid_count": 49,
+        "di_valid_count": 49,
+        "total_count": 49,
+        "hs_valid_ratio": 1.0,
+        "attempts_made": 1,
         "min_hs_valid_ratio_target": 0.5
-      },
-      "cop_error": "No se pudo obtener ninguna celda válida de oleaje Copernicus GLO",
-      "cop_search_errors": [
-        "intento 01 req=(0.67322,38.83473) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 02 req=(0.67322,38.91773) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 03 req=(0.67322,38.75173) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 04 req=(0.75622,38.83473) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 05 req=(0.59022,38.83473) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 06 req=(0.59022,38.91773) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 07 req=(0.75622,38.75173) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 08 req=(0.59022,38.75173) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 09 req=(0.75622,38.91773) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 10 req=(0.67322,39.00073) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 11 req=(0.67322,38.66873) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 12 req=(0.50722,38.83473) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 13 req=(0.83922,38.83473) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 14 req=(0.83922,38.66873) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 15 req=(0.50722,39.00073) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 16 req=(0.50722,38.66873) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 17 req=(0.83922,39.00073) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 18 req=(0.67322,39.16673) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 19 req=(0.67322,38.50273) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 20 req=(1.00522,38.83473) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 21 req=(0.34122,38.83473) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 22 req=(1.00522,39.16673) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 23 req=(0.34122,39.16673) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 24 req=(1.00522,38.50273) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 25 req=(0.34122,38.50273) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()"
-      ]
+      }
     },
     {
       "point_id": 4,
       "name": "boya2",
       "requested_lon": 0.2,
       "requested_lat": 39.51,
-      "lon": null,
-      "lat": null,
+      "lon": 0.1666666666666572,
+      "lat": 39.5,
       "forecast": [
         {
-          "time": "2026-10-12T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
-          "time": "2026-10-12T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
-        },
-        {
           "time": "2026-10-13T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 5.21,
+          "di_cop": 58.14
         },
         {
           "time": "2026-10-13T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 4.84,
+          "di_cop": 56.34
         },
         {
           "time": "2026-10-13T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 6.46,
+          "di_cop": 53.64
         },
         {
           "time": "2026-10-13T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 6.33,
+          "di_cop": 52.85
         },
         {
           "time": "2026-10-13T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 6.12,
+          "di_cop": 51.65
         },
         {
           "time": "2026-10-13T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 5.75,
+          "di_cop": 52.29
         },
         {
           "time": "2026-10-13T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.17,
+          "tp_cop": 5.15,
+          "di_cop": 58.54
         },
         {
           "time": "2026-10-13T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 5.05,
+          "di_cop": 67.99
         },
         {
           "time": "2026-10-14T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 4.83,
+          "di_cop": 79.44
         },
         {
           "time": "2026-10-14T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 4.65,
+          "di_cop": 76.22
         },
         {
           "time": "2026-10-14T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 4.51,
+          "di_cop": 67.68
         },
         {
           "time": "2026-10-14T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 6.05,
+          "di_cop": 62.22
         },
         {
           "time": "2026-10-14T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 5.82,
+          "di_cop": 63.35
         },
         {
           "time": "2026-10-14T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 5.56,
+          "di_cop": 67.73
         },
         {
           "time": "2026-10-14T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 5.4,
+          "di_cop": 73.67
         },
         {
           "time": "2026-10-14T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.16,
+          "tp_cop": 5.2,
+          "di_cop": 78.41
         },
         {
           "time": "2026-10-15T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.17,
+          "tp_cop": 5.16,
+          "di_cop": 80.74
         },
         {
           "time": "2026-10-15T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.18,
+          "tp_cop": 5.27,
+          "di_cop": 81.86
         },
         {
           "time": "2026-10-15T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.2,
+          "tp_cop": 5.6,
+          "di_cop": 79.86
         },
         {
           "time": "2026-10-15T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.21,
+          "tp_cop": 5.64,
+          "di_cop": 76.84
         },
         {
           "time": "2026-10-15T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.22,
+          "tp_cop": 5.48,
+          "di_cop": 76.78
         },
         {
           "time": "2026-10-15T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.22,
+          "tp_cop": 5.14,
+          "di_cop": 81.0
         },
         {
           "time": "2026-10-15T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.25,
+          "tp_cop": 4.81,
+          "di_cop": 99.96
         },
         {
           "time": "2026-10-15T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.36,
+          "tp_cop": 4.44,
+          "di_cop": 136.18
         },
         {
           "time": "2026-10-16T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.35,
+          "tp_cop": 3.54,
+          "di_cop": 141.2
         },
         {
           "time": "2026-10-16T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.31,
+          "tp_cop": 4.19,
+          "di_cop": 144.98
         },
         {
           "time": "2026-10-16T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.27,
+          "tp_cop": 4.14,
+          "di_cop": 144.91
         },
         {
           "time": "2026-10-16T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.22,
+          "tp_cop": 4.04,
+          "di_cop": 136.63
         },
         {
           "time": "2026-10-16T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.19,
+          "tp_cop": 4.02,
+          "di_cop": 132.27
         },
         {
           "time": "2026-10-16T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.2,
+          "tp_cop": 3.95,
+          "di_cop": 135.15
         },
         {
           "time": "2026-10-16T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.27,
+          "tp_cop": 2.75,
+          "di_cop": 145.51
         },
         {
           "time": "2026-10-16T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.28,
+          "tp_cop": 3.23,
+          "di_cop": 152.54
         },
         {
           "time": "2026-10-17T00:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.25,
+          "tp_cop": 3.28,
+          "di_cop": 154.25
         },
         {
           "time": "2026-10-17T03:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.2,
+          "tp_cop": 3.26,
+          "di_cop": 150.84
         },
         {
           "time": "2026-10-17T06:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.15,
+          "tp_cop": 3.27,
+          "di_cop": 145.06
         },
         {
           "time": "2026-10-17T09:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 3.31,
+          "di_cop": 123.22
         },
         {
           "time": "2026-10-17T12:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.18,
+          "tp_cop": 2.45,
+          "di_cop": 46.88
         },
         {
           "time": "2026-10-17T15:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.14,
+          "tp_cop": 2.58,
+          "di_cop": 49.59
         },
         {
           "time": "2026-10-17T18:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.13,
+          "tp_cop": 3.19,
+          "di_cop": 53.26
         },
         {
           "time": "2026-10-17T21:00:00Z",
-          "hs_cop": null,
-          "tp_cop": null,
-          "di_cop": null
+          "hs_cop": 0.18,
+          "tp_cop": 4.09,
+          "di_cop": 45.1
+        },
+        {
+          "time": "2026-10-18T00:00:00Z",
+          "hs_cop": 0.54,
+          "tp_cop": 3.06,
+          "di_cop": 29.07
+        },
+        {
+          "time": "2026-10-18T03:00:00Z",
+          "hs_cop": 1.04,
+          "tp_cop": 4.17,
+          "di_cop": 23.92
+        },
+        {
+          "time": "2026-10-18T06:00:00Z",
+          "hs_cop": 1.33,
+          "tp_cop": 5.08,
+          "di_cop": 25.91
+        },
+        {
+          "time": "2026-10-18T09:00:00Z",
+          "hs_cop": 1.76,
+          "tp_cop": 6.72,
+          "di_cop": 40.29
+        },
+        {
+          "time": "2026-10-18T12:00:00Z",
+          "hs_cop": 2.49,
+          "tp_cop": 7.92,
+          "di_cop": 45.28
+        },
+        {
+          "time": "2026-10-18T15:00:00Z",
+          "hs_cop": 3.04,
+          "tp_cop": 8.5,
+          "di_cop": 47.75
+        },
+        {
+          "time": "2026-10-18T18:00:00Z",
+          "hs_cop": 3.23,
+          "tp_cop": 8.88,
+          "di_cop": 47.78
+        },
+        {
+          "time": "2026-10-18T21:00:00Z",
+          "hs_cop": 3.18,
+          "tp_cop": 9.09,
+          "di_cop": 50.08
+        },
+        {
+          "time": "2026-10-19T00:00:00Z",
+          "hs_cop": 2.98,
+          "tp_cop": 9.37,
+          "di_cop": 52.26
         }
       ],
       "cop_search_info": {
         "dataset_id": "cmems_mod_glo_wav_anfc_0.083deg_PT3H-i",
         "adjusted_request_point": false,
-        "used_request_lon": null,
-        "used_request_lat": null,
-        "distance_to_selected_grid_km": null,
-        "hs_valid_count": 0,
-        "tp_valid_count": 0,
-        "di_valid_count": 0,
-        "total_count": 48,
-        "hs_valid_ratio": 0.0,
-        "attempts_made": 25,
+        "used_request_lon": 0.2,
+        "used_request_lat": 39.51,
+        "distance_to_selected_grid_km": 3.068,
+        "hs_valid_count": 49,
+        "tp_valid_count": 49,
+        "di_valid_count": 49,
+        "total_count": 49,
+        "hs_valid_ratio": 1.0,
+        "attempts_made": 1,
         "min_hs_valid_ratio_target": 0.5
-      },
-      "cop_error": "No se pudo obtener ninguna celda válida de oleaje Copernicus GLO",
-      "cop_search_errors": [
-        "intento 01 req=(0.20000,39.51000) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 02 req=(0.20000,39.59300) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 03 req=(0.20000,39.42700) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 04 req=(0.28300,39.51000) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 05 req=(0.11700,39.51000) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 06 req=(0.11700,39.59300) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 07 req=(0.28300,39.42700) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 08 req=(0.11700,39.42700) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 09 req=(0.28300,39.59300) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 10 req=(0.20000,39.67600) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 11 req=(0.20000,39.34400) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 12 req=(0.03400,39.51000) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 13 req=(0.36600,39.51000) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 14 req=(0.36600,39.34400) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 15 req=(0.03400,39.67600) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 16 req=(0.03400,39.34400) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 17 req=(0.36600,39.67600) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 18 req=(0.20000,39.84200) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 19 req=(0.20000,39.17800) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 20 req=(0.53200,39.51000) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 21 req=(-0.13200,39.51000) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 22 req=(0.53200,39.84200) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 23 req=(-0.13200,39.84200) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 24 req=(0.53200,39.17800) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()",
-        "intento 25 req=(-0.13200,39.17800) -> CouldNotConnectToAuthenticationSystem: CouldNotConnectToAuthenticationSystem()"
-      ]
+      }
     }
   ]
 }
