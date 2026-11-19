@@ -1,7 +1,7 @@
 {
   "source": "Copernicus Marine INSITU IBI NRT",
   "dataset_id": "cmems_obs-ins_glo_phybgcwav_mynrt_na_irr",
-  "generated_at": "2026-11-19T12:40:54Z",
+  "generated_at": "2026-11-19T22:49:19Z",
   "target_day": "20261118",
   "buoys": {
     "boya2": [
